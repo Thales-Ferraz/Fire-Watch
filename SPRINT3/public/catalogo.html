@@ -1,0 +1,48 @@
+<style>
+  .card-categoria {
+    background: #161819; 
+    border: 1px solid #2a2d30; 
+    border-radius: 10px; 
+    padding: 24px; 
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .card-categoria:hover {
+    transform: translateY(-4px);
+    border-color: #ff5c1a;
+  }
+</style>
+
+<div style="padding: 16px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:20px; margin-bottom: 20px;">
+    <h2 style="margin: 0; font-size: 18px; color: #fff;">Catálogo de Prevenção</h2>
+    <button id="btnInfo" onclick="toggleInfo()" style="background: transparent; border: none; color: #ffffff; cursor: pointer; font-size: 18px;">ℹ️</button>
+  </div>
+
+  <div id="infoBox" style="display: none; background: #1e2022; border: 1px solid #2a2d30; color: #f3f3f3; padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 20px;">
+    Módulo de Prevenção e Educação. Selecione uma categoria abaixo para acessar os conteúdos informativos sobre queimadas.
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px;">
+    
+    <div class="card-categoria" onclick="abrirArtigoWiki('animais')">
+      <div style="font-size: 32px; margin-bottom: 8px;">🐾</div>
+      <h4 style="margin: 0 0 8px 0; color: #fff; font-size: 16px;">Animais</h4>
+      <p style="margin: 0; font-size: 13px; color: #fdfdfd; line-height: 1.4;">Impacto das queimadas na fauna e como ajudar</p>
+    </div>
+
+    <div class="card-categoria" onclick="abrirArtigoWiki('rodovias')">
+      <div style="font-size: 32px; margin-bottom: 8px;">🛣️</div>
+      <h4 style="margin: 0 0 8px 0; color: #fff; font-size: 16px;">Rodovias</h4>
+      <p style="margin: 0; font-size: 13px; color: #ffffff; line-height: 1.4;">Segurança no trânsito durante períodos de queimada</p>
+    </div>
+
+    <div class="card-categoria" onclick="abrirArtigoWiki('saude')">
+      <div style="font-size: 32px; margin-bottom: 8px;">🏥</div>
+      <h4 style="margin: 0 0 8px 0; color: #fff; font-size: 16px;">Saúde</h4>
+      <p style="margin: 0; font-size: 13px; color: #ffffff; line-height: 1.4;">Efeitos da fumaça no organismo e como se proteger</p>
+    </div>
+
+  </div>
+</div>

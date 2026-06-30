@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Monitoramento de Queimadas</title>
+  </head>
+  <body>
+    <section class="sistema">
+      <h1>Denunciar Foco de Incêndio</h1>
+      <form id="formDenuncia">
+        <div>
+          <label>Localização:</label>
+          <input
+            type="text"
+            id="local"
+            required
+            placeholder="Ex: Parque Municipal"
+          />
+        </div>
+
+        <div>
+          <label>Data:</label>
+          <input type="date" id="data" required />
+        </div>
+
+        <div>
+          <label>Gravidade:</label>
+          <select id="gravidade">
+            <option value="Baixa">Baixa</option>
+            <option value="Média">Média</option>
+            <option value="Alta">Alta</option>
+            <option value="Crítica">Crítica</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Descrição:</label>
+          <textarea id="descricao" rows="4"></textarea>
+        </div>
+
+        <button type="submit">Enviar Denúncia</button>
+      </form>
+    </section>
+    <script src="script.js"></script>
+  </body>
+</html>

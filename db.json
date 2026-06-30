@@ -1,0 +1,176 @@
+{
+  "usuarios": [
+    {
+      "id": "1",
+      "nome": "Administrador",
+      "email": "admin@sistema.com",
+      "login": "admin",
+      "senha": "a123456",
+      "tipo": "orgao",
+      "status": "aprovado",
+      "primeiroLogin": false,
+      "orgao": "Corpo de Bombeiros",
+      "cargo": "Administrador",
+      "matricula": "ADM001",
+      "emailInstitucional": "admin@bombeiros.gov.br"
+    },
+    {
+      "nome": "a",
+      "email": "a@a",
+      "login": "a",
+      "senha": "aa",
+      "tipo": "orgao",
+      "status": "aprovado",
+      "primeiroLogin": false,
+      "orgao": "a",
+      "cargo": "a",
+      "matricula": "a",
+      "emailInstitucional": "aa@a",
+      "id": "JlP2uQaeHmU"
+    },
+    {
+      "nome": "Thales Caires Ferraz",
+      "email": "tcf.thales@gmail.com",
+      "login": "thales",
+      "senha": "aa",
+      "tipo": "civil",
+      "status": "aprovado",
+      "primeiroLogin": false,
+      "id": "mJR-Q2qTpb4"
+    },
+    {
+      "nome": "eu",
+      "email": "eu@a",
+      "login": "eu",
+      "senha": "eu12",
+      "tipo": "civil",
+      "status": "aprovado",
+      "primeiroLogin": false,
+      "id": "b3B9XpgpkiA"
+    }
+  ],
+  "historicos": [],
+  "denuncias": [
+    {
+      "local": "Rua Coronel Pacheco 136, Comiteco, Belo Horizonte - Minas Gerais, 30315-200, Brazil",
+      "data": "2026-06-26",
+      "gravidade": "Baixa",
+      "descricao": "queimada no terreno baldio",
+      "status": "Pendente",
+      "longitude": -43.924095,
+      "latitude": -19.954116,
+      "id": "JGIukdaNlg0"
+    },
+    {
+      "local": "Rua Exupério Cangussu, Almenara - Minas Gerais, 39900-000, Brazil",
+      "data": "2026-06-26",
+      "gravidade": "Baixa",
+      "descricao": "a",
+      "status": "Em Verificação",
+      "longitude": -40.694682,
+      "latitude": -16.177158,
+      "id": "fhVKItw78ig"
+    },
+    {
+      "local": "Rua Tiradentes, Almenara - Minas Gerais, 39900-000, Brazil",
+      "data": "2026-06-26",
+      "gravidade": "Crítica",
+      "descricao": "incendio\n",
+      "status": "Resolvida",
+      "longitude": -40.694332,
+      "latitude": -16.180719,
+      "id": "GYno0MaCsCQ"
+    },
+    {
+      "local": "Avenida Afonso Pena, Centro, Belo Horizonte - Minas Gerais, 30130-001, Brazil",
+      "data": "2026-06-26",
+      "gravidade": "Média",
+      "descricao": "Muita fumaça\n",
+      "status": "Alarme Falso",
+      "longitude": -43.944282,
+      "latitude": -19.918683,
+      "id": "LuM1DsGrwDE"
+    },
+    {
+      "local": "Liberdade, São Paulo, São Paulo, Brazil",
+      "data": "2026-06-26",
+      "gravidade": "Alta",
+      "descricao": "a",
+      "status": "Em Verificação",
+      "longitude": -46.63238,
+      "latitude": -23.566078,
+      "id": "ZnQUcvTSm2Y"
+    },
+    {
+      "local": "R. Pedro José Pardo, Belo Horizonte, 30210, Brazil",
+      "data": "2026-06-27",
+      "gravidade": "Média",
+      "descricao": "aa",
+      "status": "Resolvida",
+      "usuarioId": "mJR-Q2qTpb4",
+      "usuario": "thales",
+      "longitude": -43.91268741,
+      "latitude": -19.95131914,
+      "id": "wuvAoe-Rn_I"
+    },
+    {
+      "local": "Rua Coronel Pacheco, Comiteco, Belo Horizonte - Minas Gerais, 30315-200, Brazil",
+      "data": "2026-06-27",
+      "gravidade": "Baixa",
+      "descricao": "",
+      "status": "Pendente",
+      "usuarioId": "mJR-Q2qTpb4",
+      "usuario": "thales",
+      "longitude": -43.925109,
+      "latitude": -19.954952,
+      "id": "45HdqSsBsFk"
+    },
+    {
+      "local": "Av. dos Bandeirantes, Belo Horizonte, 30315, Brazil",
+      "data": "2026-06-27",
+      "horario": "13:46",
+      "gravidade": "Baixa",
+      "descricao": "",
+      "status": "Pendente",
+      "usuarioId": "mJR-Q2qTpb4",
+      "usuario": "thales",
+      "longitude": -43.93006162,
+      "latitude": -19.95843729,
+      "id": "90BtX9n7ems"
+    }
+  ],
+  "topicos": [
+    {
+      "titulo": "fogo gigante",
+      "descricao": "fogo em fabrica",
+      "dataCriacao": "28/06/2026, 13:02:30",
+      "autor": "Administrador",
+      "posts": [],
+      "id": "ZDHkfVnTbx4"
+    },
+    {
+      "titulo": "fb f",
+      "descricao": "yifçf",
+      "dataCriacao": "29/06/2026, 19:22:58",
+      "autor": "Administrador",
+      "posts": [],
+      "id": "WscB3rMrnvI"
+    },
+    {
+      "titulo": "Bombeiros BH",
+      "descricao": "Bombeiros BH",
+      "dataCriacao": "29/06/2026, 20:03:24",
+      "autor": "Thales Caires Ferraz",
+      "posts": [
+        {
+          "id": 1782774218400,
+          "autor": "Thales Caires Ferraz",
+          "mensagem": "Exelentes!",
+          "data": "29/06/2026, 20:03:38",
+          "comentarios": []
+        }
+      ],
+      "id": "B46jlKQ9C3Y"
+    }
+  ]
+}
