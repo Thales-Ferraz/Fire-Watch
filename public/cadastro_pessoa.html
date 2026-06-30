@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro</title>
+
+    <link rel="stylesheet" href="assets/css/login-cadastro.css" />
+  </head>
+
+  <body>
+    <div class="auth-container">
+      <div class="auth-card cadastro-card">
+        <div class="logo">🔥 <span>FireWatch</span></div>
+
+        <h2>Criar Conta</h2>
+
+        <p class="subtitle">
+          Cadastre-se para registrar e acompanhar denúncias de queimadas.
+        </p>
+
+        <form id="formCadastro">
+          <div class="form-group">
+            <label for="nome">Nome Completo</label>
+            <input
+              type="text"
+              id="nome"
+              placeholder="Digite seu nome completo"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="email">E-mail</label>
+            <input
+              type="email"
+              id="email"
+              placeholder="Digite seu e-mail"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="login">Usuário</label>
+            <input
+              type="text"
+              id="login"
+              placeholder="Escolha um usuário"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="senha">Senha</label>
+            <input
+              type="password"
+              id="senha"
+              placeholder="Crie uma senha"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="senha2">Confirmar Senha</label>
+            <input
+              type="password"
+              id="senha2"
+              placeholder="Repita sua senha"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="tipo">Tipo de Usuário</label>
+
+            <select id="tipo" required>
+              <option value="civil">Civil</option>
+              <option value="orgao">Órgão Público</option>
+            </select>
+          </div>
+
+          <div id="camposOrgao" style="display: none">
+            <div class="form-group">
+              <label for="orgao">Nome do Órgão</label>
+              <input
+                type="text"
+                id="orgao"
+                placeholder="Ex.: Corpo de Bombeiros"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="cargo">Cargo</label>
+              <input type="text" id="cargo" placeholder="Seu cargo" />
+            </div>
+
+            <div class="form-group">
+              <label for="matricula">Matrícula Funcional</label>
+              <input
+                type="text"
+                id="matricula"
+                placeholder="Número da matrícula"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="emailInstitucional">E-mail Institucional</label>
+              <input
+                type="email"
+                id="emailInstitucional"
+                placeholder="nome@orgao.gov.br"
+              />
+            </div>
+          </div>
+
+          <button type="submit" class="btn-auth">Cadastrar</button>
+        </form>
+
+        <a href="login.html" class="link"> Já possuo cadastro </a>
+      </div>
+    </div>
+
+    <script src="assets/js/cadastro.js"></script>
+  </body>
+</html>
