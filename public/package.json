@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "start": "json-server --watch db.json"
+    "start": "npx json-server --watch db.json --port 3000"
   },
   "repository": {
     "type": "git",
