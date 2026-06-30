@@ -166,3 +166,7 @@ async function renderGraficoPorEstado() {
     console.error("Erro ao renderizar gráfico:", erro);
   }
 }
+document.addEventListener("DOMContentLoaded", () => {
+  // Chama a função automaticamente ao entrar no site
+  abrirDashboard();
+});
