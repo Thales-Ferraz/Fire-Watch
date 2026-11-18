@@ -1,0 +1,70 @@
+{
+  "usuarios": [
+    {
+      "id": "admin",
+      "nome": "Administrador",
+      "email": "admin@firewatch.test",
+      "login": "admin",
+      "senha": "Admin@123",
+      "tipo": "orgao",
+      "admin": true,
+      "status": "aprovado",
+      "primeiroLogin": false,
+      "orgao": "Corpo de Bombeiros",
+      "cargo": "Administrador",
+      "matricula": "ADM001",
+      "emailInstitucional": "admin@firewatch.test"
+    },
+    {
+      "id": "orgao-demo",
+      "nome": "Órgão Demonstração",
+      "email": "orgao@firewatch.test",
+      "login": "orgao",
+      "senha": "Orgao@123",
+      "tipo": "orgao",
+      "status": "aprovado",
+      "primeiroLogin": false,
+      "orgao": "Defesa Civil",
+      "cargo": "Analista",
+      "matricula": "DC0001",
+      "emailInstitucional": "orgao@firewatch.test"
+    },
+    {
+      "id": "civil-demo",
+      "nome": "Cidadão Demonstração",
+      "email": "civil@firewatch.test",
+      "login": "civil",
+      "senha": "Civil@123",
+      "tipo": "civil",
+      "status": "aprovado",
+      "primeiroLogin": false
+    }
+  ],
+  "denuncias": [
+    {
+      "id": "den-demo-1",
+      "local": "Avenida Afonso Pena, Centro, Belo Horizonte - Minas Gerais, 30130-001, Brazil",
+      "data": "2026-06-26",
+      "horario": "14:30",
+      "gravidade": "Média",
+      "descricao": "Muita fumaça vindo de um terreno.",
+      "foto": null,
+      "status": "Pendente",
+      "usuarioId": "civil-demo",
+      "usuario": "civil",
+      "longitude": -43.944282,
+      "latitude": -19.918683
+    }
+  ],
+  "topicos": [
+    {
+      "id": "top-demo-1",
+      "titulo": "Bem-vindo ao fórum",
+      "descricao": "Use este espaço para trocar informações sobre focos de incêndio na sua região.",
+      "dataCriacao": "29/06/2026, 20:03:24",
+      "autor": "Administrador",
+      "autorId": "admin",
+      "posts": []
+    }
+  ]
+}

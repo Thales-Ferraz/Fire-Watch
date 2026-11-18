@@ -30,7 +30,8 @@ function inicializarFormulario() {
   if (!form) return;
 
   const searchBox = document.getElementById("local-busca");
-  
+  searchBox.accessToken = MAPBOX_TOKEN; // token centralizado em config.js
+
   // Variáveis para guardar as coordenadas que o Mapbox encontrar na lista
   let longitudeSelecionada = null;
   let latitudeSelecionada = null;
@@ -57,10 +58,8 @@ function inicializarFormulario() {
         return;
     }
 
-    const usuario = JSON.parse(sessionStorage.getItem("usuarioLogado"));
-
-    if (!usuario) {
-      alert("Usuário não está logado.");
+    if (!isLogado()) {
+      alert("Faça login para enviar uma denúncia.");
       return;
     }
 
@@ -105,7 +104,7 @@ if (fotoInput && fotoInput.files[0]) {
 }
 
 
-    // Monta os dados com precisão cirúrgica
+    // O autor e o status inicial ("Pendente") são definidos pelo servidor, a partir do token.
     const dados = {
       local: nomeLocalSelecionado,
       data: document.getElementById("data").value,
@@ -113,43 +112,28 @@ if (fotoInput && fotoInput.files[0]) {
       gravidade: gravidadeSelecionada ? gravidadeSelecionada.value : "Baixa",
       descricao: document.getElementById("descricao").value,
       foto: fotoBase64,
-      status: "Pendente",
-      usuarioId: usuario.id,
-      usuario: usuario.login,
       longitude: longitudeSelecionada,
       latitude: latitudeSelecionada
     };
 
     try {
-      const resposta = await fetch("https://fire-watch.onrender.com/denuncias", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados),
-      });
-
-      if (resposta.ok) {
-        alert("Denúncia cadastrada com sucesso!");
-        form.reset();
-        fecharModal();
-        window.location.reload(); // Recarrega a página para atualizar o mapa principal
-      } else {
-        alert("Erro no servidor: " + resposta.status);
-      }
+      await apiFetch("/denuncias", { method: "POST", body: dados });
+      alert("Denúncia cadastrada com sucesso!");
+      form.reset();
+      fecharModal();
+      window.location.reload(); // Recarrega a página para atualizar o mapa principal
     } catch (erro) {
       console.error(erro);
-      alert("Erro ao conectar ao servidor.");
+      alert(erro.message);
     }
   });
-
-  document
-    .getElementById("modalDenuncia")
-    .addEventListener("click", (e) => {
-
-      if (e.target.id === "modalDenuncia") {
-
-        fecharModal();
-
-      }
-
-    });
 }
+
+// Fecha o modal ao clicar fora dele (registrado uma única vez).
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById("modalDenuncia");
+  if (!modal) return;
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) fecharModal();
+  });
+});

@@ -1,17 +1,13 @@
 // Histórico e renderização de cards
 async function abrirHistorico() {
   try {
-    const usuario = JSON.parse(sessionStorage.getItem("usuarioLogado"));
-
-    if (!usuario) {
+    if (!isLogado()) {
       renderCards([]);
       return;
     }
 
-    const resposta = await fetch(
-      `https://fire-watch.onrender.com/denuncias?usuarioId=${usuario.id}`
-    );
-    const denuncias = await resposta.json();
+    // O servidor filtra pelas denúncias do usuário do token.
+    const denuncias = await apiFetch("/denuncias?minhas");
     renderCards(denuncias.reverse());
   } catch (erro) {
     renderCards([]);
@@ -20,6 +16,7 @@ async function abrirHistorico() {
 }
 
 function createCard(denuncia) {
+  const foto = urlImagemSegura(denuncia.foto);
   // Cores baseadas na gravidade para o badge
   let corGravidade = "#ff8c42"; // Média (Laranja)
   if (denuncia.gravidade === "Baixa") corGravidade = "#1eeb84"; // Verde
@@ -44,7 +41,7 @@ function createCard(denuncia) {
       gap: 12px;
   ">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-          <h5 style="margin: 0; font-size: 15px; font-weight: 600; color: #fff;">${denuncia.local}</h5>
+          <h5 style="margin: 0; font-size: 15px; font-weight: 600; color: #fff;">${escapeHTML(denuncia.local)}</h5>
           <span style="
               font-size: 10px; 
               font-weight: 700; 
@@ -54,12 +51,12 @@ function createCard(denuncia) {
               background: ${corGravidade}; 
               color: #fff;
               white-space: nowrap;
-          ">${denuncia.gravidade}</span>
+          ">${escapeHTML(denuncia.gravidade)}</span>
       </div>
       
       <p style="margin: 0; font-size: 13px; color: #8a9099; line-height: 1.4;">
-          <strong style="color: #c4c8cd;">Descrição:</strong> ${denuncia.descricao}${denuncia.foto ? `
-            <img src="${denuncia.foto}" style="
+          <strong style="color: #c4c8cd;">Descrição:</strong> ${escapeHTML(denuncia.descricao)}${foto ? `
+            <img src="${foto}" alt="Foto da denúncia" style="
               width: 100%;
               max-height: 160px;
               object-fit: cover;
@@ -71,14 +68,14 @@ function createCard(denuncia) {
       
       <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto;">
           <span style="font-size: 11px; background: #1e2022; color: #8a9099; padding: 4px 8px; border-radius: 4px; border: 1px solid #2a2d30;">
-              📅 ${denuncia.data} ${denuncia.horario ? "· 🕐 " + denuncia.horario : ""}
+              📅 ${escapeHTML(denuncia.data)} ${denuncia.horario ? "· 🕐 " + escapeHTML(denuncia.horario) : ""}
           </span>
           <span style="font-size: 11px; background: ${corStatus.bg}; color: ${corStatus.cor}; padding: 4px 8px; border-radius: 4px; font-weight: 600;">
-            ${denuncia.status}
+            ${escapeHTML(denuncia.status)}
           </span>                   
       </div>
       <button
-        onclick="excluirDenuncia('${denuncia.id}')"
+        onclick="excluirDenuncia(this.dataset.id)" data-id="${escapeHTML(denuncia.id)}"
         style="
         width: 100%; padding: 8px; border: none; border-radius: 6px;
         background: #2a0000; color: #ff3b3b;
@@ -143,17 +140,10 @@ async function excluirDenuncia(id) {
   if (!confirmado) return;
 
   try {
-    const resposta = await fetch(`https://fire-watch.onrender.com/denuncias/${id}`, {
-      method: "DELETE"
-    });
-
-    if (resposta.ok) {
-      abrirHistorico();
-    } else {
-      alert("Erro ao excluir: " + resposta.status);
-    }
+    await apiFetch(`/denuncias/${encodeURIComponent(id)}`, { method: "DELETE" });
+    abrirHistorico();
   } catch (erro) {
     console.error("Erro:", erro);
-    alert("Erro ao conectar ao servidor.");
+    alert(erro.message);
   }
 }

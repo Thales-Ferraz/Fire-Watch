@@ -1,5 +1,3 @@
-const API_URL = "https://fire-watch.onrender.com/usuarios";
-
 document.addEventListener("DOMContentLoaded", () => {
   const tipoUsuario = document.getElementById("tipo");
   const camposOrgao = document.getElementById("camposOrgao");
@@ -29,9 +27,15 @@ async function cadastrarUsuario(event) {
   const senha = document.getElementById("senha").value;
   const senha2 = document.getElementById("senha2").value;
   const tipo = document.getElementById("tipo").value;
+  const botao = event.target.querySelector("button[type=submit]");
 
   if (!nome || !email || !login || !senha || !senha2 || !tipo) {
     alert("Preencha todos os campos obrigatórios.");
+    return;
+  }
+
+  if (senha.length < 6) {
+    alert("A senha precisa ter pelo menos 6 caracteres.");
     return;
   }
 
@@ -40,70 +44,41 @@ async function cadastrarUsuario(event) {
     return;
   }
 
+  const novoUsuario = { nome, email, login, senha, tipo };
+
+  // se for órgão, exige campos extras
+  if (tipo === "orgao") {
+    const orgao = document.getElementById("orgao").value.trim();
+    const cargo = document.getElementById("cargo").value.trim();
+    const matricula = document.getElementById("matricula").value.trim();
+    const emailInstitucional = document.getElementById("emailInstitucional").value.trim();
+
+    if (!orgao || !cargo || !matricula || !emailInstitucional) {
+      alert("Preencha todos os campos do órgão público.");
+      return;
+    }
+
+    Object.assign(novoUsuario, { orgao, cargo, matricula, emailInstitucional });
+  }
+
+  if (botao) botao.disabled = true;
   try {
-    // verifica login repetido
-    const respostaLogin = await fetch(`${API_URL}?login=${encodeURIComponent(login)}`);
-    const usuariosMesmoLogin = await respostaLogin.json();
-
-    if (usuariosMesmoLogin.length > 0) {
-      alert("Já existe um usuário com esse login.");
-      return;
-    }
-
-    // verifica email repetido
-    const respostaEmail = await fetch(`${API_URL}?email=${encodeURIComponent(email)}`);
-    const usuariosMesmoEmail = await respostaEmail.json();
-
-    if (usuariosMesmoEmail.length > 0) {
-      alert("Já existe um usuário com esse e-mail.");
-      return;
-    }
-
-    const novoUsuario = {
-      nome,
-      email,
-      login,
-      senha,
-      tipo,
-      status: "aprovado",   // TODO MUNDO já entra aprovado
-      primeiroLogin: true
-    };
-
-    // se for órgão, exige campos extras
-    if (tipo === "orgao") {
-      const orgao = document.getElementById("orgao").value.trim();
-      const cargo = document.getElementById("cargo").value.trim();
-      const matricula = document.getElementById("matricula").value.trim();
-      const emailInstitucional = document.getElementById("emailInstitucional").value.trim();
-
-      if (!orgao || !cargo || !matricula || !emailInstitucional) {
-        alert("Preencha todos os campos do órgão público.");
-        return;
-      }
-
-      novoUsuario.orgao = orgao;
-      novoUsuario.cargo = cargo;
-      novoUsuario.matricula = matricula;
-      novoUsuario.emailInstitucional = emailInstitucional;
-    }
-
-    const resposta = await fetch(API_URL, {
+    // Login/e-mail repetidos, validações e o status inicial são decididos pelo servidor.
+    const { usuario } = await apiFetch("/auth/cadastro", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(novoUsuario)
+      body: novoUsuario,
     });
 
-    if (!resposta.ok) {
-      throw new Error("Erro ao salvar usuário.");
-    }
-
-    alert("Cadastro realizado com sucesso!");
+    alert(
+      usuario.status === "pendente"
+        ? "Cadastro realizado! Seu acesso de órgão público será liberado após aprovação de um administrador."
+        : "Cadastro realizado com sucesso!"
+    );
     window.location.href = "login.html";
-
   } catch (erro) {
     console.error("Erro no cadastro:", erro);
-    alert("Erro ao cadastrar usuário.");
+    alert(erro.message);
+  } finally {
+    if (botao) botao.disabled = false;
   }
 }

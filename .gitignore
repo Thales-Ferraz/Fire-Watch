@@ -1,0 +1,15 @@
+# Dependências
+node_modules/
+
+# Banco de dados local (dados reais NÃO vão para o git; o seed fica em server/db.seed.json)
+server/data/
+*.tmp
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Sistema
+.DS_Store
+Thumbs.db
