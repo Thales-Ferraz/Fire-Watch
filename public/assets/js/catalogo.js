@@ -1,12 +1,15 @@
-// Função auxiliar para exibir/esconder o box informativo
-function toggleInfo() {
-  const box = document.getElementById('infoBox');
-  if (box) {
-    box.style.display = box.style.display === 'none' ? 'block' : 'none';
-  }
+// Catálogo de Prevenção.
+// Rotas: #/catalogo (categorias) e #/catalogo/<categoria> (artigo).
+// O texto dos artigos fica no objeto "artigos", no fim deste arquivo.
+
+function toggleInfo(botao) {
+  const box = document.getElementById("infoBox");
+  if (!box) return;
+  box.hidden = !box.hidden;
+  if (botao) botao.setAttribute("aria-expanded", String(!box.hidden));
 }
 
-// 1. Abre a tela inicial com a lista de categorias do catálogo
+// Lista de categorias
 async function abrirCatalogo() {
   const mainContent = document.querySelector(".content");
   if (!mainContent) return;
@@ -14,65 +17,58 @@ async function abrirCatalogo() {
   try {
     const resposta = await fetch("catalogo.html");
     if (!resposta.ok) throw new Error("Erro ao carregar catálogo.");
-    
     const html = await resposta.text();
+    if (rotaAtual() !== "catalogo") return;
     mainContent.innerHTML = html;
   } catch (erro) {
     console.error(erro);
-    mainContent.innerHTML = `<p style="color: #ff3b3b; text-align: center; padding: 20px;">⚠️ Erro ao carregar o catálogo.</p>`;
+    mainContent.innerHTML = `<p class="estado-erro">Erro ao carregar o catálogo.</p>`;
   }
 }
 
-// 2. Renderiza o artigo selecionado na tela principal (Estilo Wikipédia)
+// Artigo de uma categoria (estilo Wikipédia: sumário + seções)
 function abrirArtigoWiki(categoria) {
   const mainContent = document.querySelector(".content");
   if (!mainContent) return;
 
   const artigo = artigos[categoria];
-
   if (!artigo) {
-    mainContent.innerHTML = `<p style="color: #ff3b3b; padding: 20px;">Artigo não encontrado. <a href="#" onclick="abrirCatalogo()">Voltar</a></p>`;
+    mainContent.innerHTML = `
+      <a class="btn btn-fantasma btn-sm voltar" href="#/catalogo">${icone("voltar")} Voltar</a>
+      <p class="estado-erro">Artigo não encontrado.</p>`;
     return;
   }
 
-  // Gera o sumário lateral do artigo
-  const linksSumario = artigo.secoes.map((secao, i) => `
-    <li style="margin-bottom: 10px;">
-      <a href="#${secao.id}" style="color: #ff5c1a; text-decoration: none; font-size: 14px;">${i + 1}. ${secao.titulo}</a>
-    </li>
-  `).join("");
+  // O sumário usa botões (e não links "#secao") para não conflitar com as rotas por "#".
+  const linksSumario = artigo.secoes.map((secao) => `
+    <li><button type="button" data-secao="${secao.id}">${secao.titulo}</button></li>`).join("");
 
-  // Gera os blocos de conteúdo textual
-  const blocosConteudo = artigo.secoes.map(secao => `
-    <div id="${secao.id}" style="margin-bottom: 32px; background: #161819; border: 1px solid #2a2d30; padding: 20px; border-radius: 8px;">
-      <h3 style="color: #fff; font-size: 18px; margin-top: 0; margin-bottom: 12px; border-bottom: 1px solid #2a2d30; padding-bottom: 8px;">${secao.titulo}</h3>
-      <div style="color: #d2d0d0; font-size: 14px; line-height: 1.6;">${secao.conteudo}</div>
-    </div>
-  `).join("");
+  // O conteúdo dos artigos é fixo (escrito no código), por isso pode ir direto como HTML.
+  const blocosConteudo = artigo.secoes.map((secao) => `
+    <section class="card artigo-secao" id="secao-${secao.id}">
+      <h3>${secao.titulo}</h3>
+      <div>${secao.conteudo}</div>
+    </section>`).join("");
 
-  // Injeta o layout de duas colunas (Sumário esquerdo | Conteúdo direito)
   mainContent.innerHTML = `
-    <div style="padding: 16px;">
-      <div style="margin-bottom: 20px;">
-        <button onclick="abrirCatalogo()" style="background: transparent; border: 1px solid #2a2d30; color: #c4c8cd; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;">
-          ← Voltar ao Catálogo
-        </button>
-        <h1 style="color: #fff; font-size: 24px; margin: 12px 0 0 0;">${artigo.titulo}</h1>
-      </div>
+    <a class="btn btn-fantasma btn-sm voltar" href="#/catalogo">${icone("voltar")} Voltar</a>
+    <h2 class="titulo-pagina">${artigo.titulo}</h2>
+    <div class="artigo">
+      <nav class="card artigo-sumario" aria-label="Sumário">
+        <h2>Sumário</h2>
+        <ol>${linksSumario}</ol>
+      </nav>
+      <div class="artigo-conteudo">${blocosConteudo}</div>
+    </div>`;
 
-      <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 200px; max-width: 280px; background: #161819; border: 1px solid #2a2d30; padding: 16px; border-radius: 8px; height: fit-content;">
-          <div style="font-weight: 700; color: #fff; margin-bottom: 12px; border-bottom: 1px solid #2a2d30; padding-bottom: 6px;">Sumário</div>
-          <ul style="list-style: none; padding: 0; margin: 0;">${linksSumario}</ul>
-        </div>
-
-        <div style="flex: 2; min-width: 300px;">
-          ${blocosConteudo}
-        </div>
-      </div>
-    </div>
-  `;
+  mainContent.querySelectorAll("[data-secao]").forEach((b) => {
+    b.addEventListener("click", () => {
+      const alvo = document.getElementById(`secao-${b.dataset.secao}`);
+      alvo?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
 }
+
 const artigos = {
   animais: {
 titulo: "Queimadas e Impacto na Fauna",

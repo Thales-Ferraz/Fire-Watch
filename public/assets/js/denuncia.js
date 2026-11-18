@@ -1,36 +1,42 @@
-function setNav(el) {
-  document
-    .querySelectorAll(".nav-item")
-    .forEach((i) => i.classList.remove("active"));
-  if (el.classList.contains("nav-item")) el.classList.add("active");
-}
+// Formulário de nova denúncia, aberto num <dialog> (Esc fecha, o foco fica preso
+// dentro do formulário e volta ao botão que abriu quando ele fecha).
 
-// Funções para controle do Modal
+let denunciaHtml = null; // denuncia.html fica em cache depois da 1ª vez
+
 async function abrirModal() {
   if (!isLogado()) {
-    if (confirm("Você precisa entrar na sua conta para fazer uma denúncia. Ir para o login?")) {
-      window.location.href = "login.html";
-    }
+    const ir = await confirmar("Você precisa entrar na sua conta para fazer uma denúncia.", {
+      titulo: "Entrar para denunciar",
+      textoOk: "Ir para o login",
+    });
+    if (ir) window.location.href = "login.html";
     return;
   }
 
   const modal = document.getElementById("modalDenuncia");
   const conteudo = document.getElementById("conteudoModal");
 
-  const resposta = await fetch("denuncia.html");
-  const html = await resposta.text();
+  try {
+    if (!denunciaHtml) {
+      const resposta = await fetch("denuncia.html");
+      if (!resposta.ok) throw new Error();
+      denunciaHtml = await resposta.text();
+    }
+  } catch {
+    toast("Não foi possível abrir o formulário. Tente novamente.", "erro");
+    return;
+  }
 
-  conteudo.innerHTML = html;
-  modal.classList.add("active");
-
+  conteudo.innerHTML = denunciaHtml;
   inicializarFormulario();
+  if (!modal.open) modal.showModal();
+  document.getElementById("data")?.focus();
 }
 
 function fecharModal() {
-  document.getElementById("modalDenuncia").classList.remove("active");
+  const modal = document.getElementById("modalDenuncia");
+  if (modal?.open) modal.close();
 }
-
-// Lógica de envio do formulário integrada
 
 function inicializarFormulario() {
   const form = document.getElementById("formDenuncia");
@@ -38,107 +44,95 @@ function inicializarFormulario() {
 
   const searchBox = document.getElementById("local-busca");
   searchBox.accessToken = MAPBOX_TOKEN; // token centralizado em config.js
+  const ajudaLocal = document.getElementById("ajudaLocal");
 
   // A data do foco começa em "hoje" e não pode ser no futuro.
   const campoData = document.getElementById("data");
   campoData.max = hojeLocal();
   campoData.value = hojeLocal();
 
-  // Variáveis para guardar as coordenadas que o Mapbox encontrar na lista
-  let longitudeSelecionada = null;
-  let latitudeSelecionada = null;
-  let nomeLocalSelecionado = "";
+  // Coordenadas do endereço escolhido na lista do Mapbox
+  let local = null;
 
-  // Evento disparado AUTOMATICAMENTE quando o usuário clica em uma sugestão da lista
-  searchBox.addEventListener('retrieve', (event) => {
-      const feature = event.detail.features[0];
-      
-      // Captura o nome certinho do lugar e as coordenadas geográficas reais
-      nomeLocalSelecionado = feature.properties.full_address || feature.properties.name;
-      longitudeSelecionada = feature.geometry.coordinates[0];
-      latitudeSelecionada = feature.geometry.coordinates[1];
-      
-      console.log("Local selecionado com sucesso:", nomeLocalSelecionado, longitudeSelecionada, latitudeSelecionada);
+  searchBox.addEventListener("retrieve", (event) => {
+    const feature = event.detail.features[0];
+    local = {
+      nome: feature.properties.full_address || feature.properties.name,
+      longitude: feature.geometry.coordinates[0],
+      latitude: feature.geometry.coordinates[1],
+    };
+    ajudaLocal.innerHTML = `${icone("check", "ico-sm")} ${escapeHTML(local.nome)}`;
+    ajudaLocal.classList.add("ok");
+  });
+
+  // Se apagar o endereço, a seleção anterior deixa de valer.
+  searchBox.addEventListener("clear", () => {
+    local = null;
+    ajudaLocal.textContent = "Digite o endereço e escolha uma opção da lista.";
+    ajudaLocal.classList.remove("ok");
+  });
+
+  // Mostra o nome da foto escolhida no campo de foto.
+  const fotoInputCampo = document.getElementById("foto");
+  const fotoNome = document.getElementById("fotoNome");
+  fotoInputCampo.addEventListener("change", () => {
+    const arquivo = fotoInputCampo.files[0];
+    fotoNome.textContent = arquivo ? arquivo.name : "Toque para tirar ou escolher uma foto";
+    fotoNome.closest(".campo-foto").classList.toggle("ok", !!arquivo);
   });
 
   const botaoEnviar = form.querySelector("button[type=submit]");
-  const textoBotao = botaoEnviar ? botaoEnviar.textContent : "";
   let enviando = false;
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (enviando) return; // evita denúncia duplicada com duplo clique
 
-    // Se o usuário digitou mas não clicou em uma sugestão válida da lista do Mapbox
-    if (!longitudeSelecionada || !latitudeSelecionada) {
-        alert("Por favor, selecione uma localização válida na lista de sugestões do mapa.");
-        return;
-    }
-
-    if (!isLogado()) {
-      alert("Faça login para enviar uma denúncia.");
+    if (!local) {
+      toast("Escolha o local do foco na lista de sugestões.", "erro");
+      searchBox.querySelector("input")?.focus();
       return;
     }
-
     if (!campoData.value || campoData.value > hojeLocal()) {
-      alert("Informe uma data válida (não pode ser no futuro).");
+      toast("Informe uma data válida (não pode ser no futuro).", "erro");
+      campoData.focus();
       return;
     }
 
-    const gravidadeSelecionada = document.querySelector('input[name="gravidade"]:checked');
+    const gravidade = form.querySelector('input[name="gravidade"]:checked')?.value || "Baixa";
+    const fotoInput = document.getElementById("foto");
 
     enviando = true;
-    if (botaoEnviar) {
-      botaoEnviar.disabled = true;
-      botaoEnviar.textContent = "Enviando…";
-    }
-
-    /* FOTO */
-    let fotoBase64 = null;
-    const fotoInput = document.getElementById("foto");
-    if (fotoInput && fotoInput.files[0]) {
-      try {
-        fotoBase64 = await comprimirFoto(fotoInput.files[0]);
-      } catch (erro) {
-        alert(erro.message);
-        enviando = false;
-        if (botaoEnviar) {
-          botaoEnviar.disabled = false;
-          botaoEnviar.textContent = textoBotao;
-        }
-        return;
-      }
-    }
-
-
-    // O autor e o status inicial ("Pendente") são definidos pelo servidor, a partir do token.
-    const dados = {
-      local: nomeLocalSelecionado,
-      data: document.getElementById("data").value,
-      horario: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-      gravidade: gravidadeSelecionada ? gravidadeSelecionada.value : "Baixa",
-      descricao: document.getElementById("descricao").value,
-      foto: fotoBase64,
-      longitude: longitudeSelecionada,
-      latitude: latitudeSelecionada
-    };
-
     try {
-      await apiFetch("/denuncias", { method: "POST", body: dados });
-      alert("Denúncia cadastrada com sucesso!");
-      form.reset();
+      await comBotaoOcupado(botaoEnviar, "Enviando…", async () => {
+        const foto = fotoInput.files[0] ? await comprimirFoto(fotoInput.files[0]) : null;
+
+        // O autor e o status inicial ("Pendente") são definidos pelo servidor, a partir do token.
+        await apiFetch("/denuncias", {
+          method: "POST",
+          body: {
+            local: local.nome,
+            data: campoData.value,
+            horario: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+            gravidade,
+            descricao: document.getElementById("descricao").value,
+            foto,
+            longitude: local.longitude,
+            latitude: local.latitude,
+          },
+        });
+      });
+
       fecharModal();
-      // Atualiza só os dados do dashboard (se estiver aberto), sem recarregar a página.
-      atualizarDashboard();
+      toast("Denúncia enviada! Obrigado por ajudar.", "sucesso");
+      // Atualiza a tela atual sem recarregar a página.
+      if (rotaAtual() === "dashboard") atualizarDashboard();
+      if (rotaAtual() === "historico") abrirHistorico();
     } catch (erro) {
       console.error(erro);
-      alert(erro.message);
+      toast(erro.message, "erro");
     } finally {
       enviando = false;
-      if (botaoEnviar) {
-        botaoEnviar.disabled = false;
-        botaoEnviar.textContent = textoBotao;
-      }
     }
   });
 }
@@ -171,7 +165,7 @@ function comprimirFoto(arquivo) {
   });
 }
 
-// Fecha o modal ao clicar fora dele (registrado uma única vez).
+// Fecha o formulário ao clicar fora dele (no fundo escuro).
 document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("modalDenuncia");
   if (!modal) return;
