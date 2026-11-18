@@ -29,8 +29,8 @@ function renderMapa(denunciasAtivas) {
     if (isNaN(lng) || isNaN(lat)) return;
 
     const popup = new mapboxgl.Popup({ offset: [0, -15] }).setHTML(`
-      <div style="color:#111;font-size:13px;line-height:1.4;max-width:220px;">
-        <strong>🔥 ${escapeHTML(d.local)}</strong><br>
+      <div class="popup-mapa">
+        <strong>${escapeHTML(d.local)}</strong><br>
         Gravidade: ${escapeHTML(d.gravidade)}<br>
         Status: ${escapeHTML(normalizarStatus(d.status))}<br>
         ${escapeHTML(d.data)}${d.horario ? " · " + escapeHTML(d.horario) : ""}

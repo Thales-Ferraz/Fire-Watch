@@ -1,84 +1,79 @@
+const CAMPOS_ORGAO = ["orgao", "cargo", "matricula", "emailInstitucional"];
+
 document.addEventListener("DOMContentLoaded", () => {
   const tipoUsuario = document.getElementById("tipo");
   const camposOrgao = document.getElementById("camposOrgao");
   const form = document.getElementById("formCadastro");
 
+  // Mostra os campos do órgão só quando o tipo é "Órgão Público"
+  // (e só então eles passam a ser obrigatórios).
+  const atualizarCamposOrgao = () => {
+    const orgao = tipoUsuario.value === "orgao";
+    camposOrgao.hidden = !orgao;
+    CAMPOS_ORGAO.forEach((id) => (document.getElementById(id).required = orgao));
+  };
+
   if (tipoUsuario && camposOrgao) {
-    tipoUsuario.addEventListener("change", () => {
-      camposOrgao.style.display =
-        tipoUsuario.value === "orgao" ? "block" : "none";
-    });
-
-    camposOrgao.style.display =
-      tipoUsuario.value === "orgao" ? "block" : "none";
+    tipoUsuario.addEventListener("change", atualizarCamposOrgao);
+    atualizarCamposOrgao();
   }
 
-  if (form) {
-    form.addEventListener("submit", cadastrarUsuario);
-  }
+  form?.addEventListener("submit", cadastrarUsuario);
 });
 
 async function cadastrarUsuario(event) {
   event.preventDefault();
 
-  const nome = document.getElementById("nome").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const login = document.getElementById("login").value.trim();
+  const valor = (id) => document.getElementById(id).value.trim();
+  const nome = valor("nome");
+  const email = valor("email");
+  const login = valor("login");
   const senha = document.getElementById("senha").value;
   const senha2 = document.getElementById("senha2").value;
   const tipo = document.getElementById("tipo").value;
   const botao = event.target.querySelector("button[type=submit]");
 
   if (!nome || !email || !login || !senha || !senha2 || !tipo) {
-    alert("Preencha todos os campos obrigatórios.");
+    toast("Preencha todos os campos obrigatórios.", "erro");
     return;
   }
-
   if (senha.length < 6) {
-    alert("A senha precisa ter pelo menos 6 caracteres.");
+    toast("A senha precisa ter pelo menos 6 caracteres.", "erro");
+    document.getElementById("senha").focus();
     return;
   }
-
   if (senha !== senha2) {
-    alert("As senhas não conferem.");
+    toast("As senhas não conferem.", "erro");
+    document.getElementById("senha2").focus();
     return;
   }
 
   const novoUsuario = { nome, email, login, senha, tipo };
 
-  // se for órgão, exige campos extras
   if (tipo === "orgao") {
-    const orgao = document.getElementById("orgao").value.trim();
-    const cargo = document.getElementById("cargo").value.trim();
-    const matricula = document.getElementById("matricula").value.trim();
-    const emailInstitucional = document.getElementById("emailInstitucional").value.trim();
-
-    if (!orgao || !cargo || !matricula || !emailInstitucional) {
-      alert("Preencha todos os campos do órgão público.");
+    const dadosOrgao = Object.fromEntries(CAMPOS_ORGAO.map((id) => [id, valor(id)]));
+    if (Object.values(dadosOrgao).some((v) => !v)) {
+      toast("Preencha todos os campos do órgão público.", "erro");
       return;
     }
-
-    Object.assign(novoUsuario, { orgao, cargo, matricula, emailInstitucional });
+    Object.assign(novoUsuario, dadosOrgao);
   }
 
-  if (botao) botao.disabled = true;
   try {
     // Login/e-mail repetidos, validações e o status inicial são decididos pelo servidor.
-    const { usuario } = await apiFetch("/auth/cadastro", {
-      method: "POST",
-      body: novoUsuario,
-    });
+    const { usuario } = await comBotaoOcupado(botao, "Cadastrando…", () =>
+      apiFetch("/auth/cadastro", { method: "POST", body: novoUsuario })
+    );
 
-    alert(
+    toastDepois(
       usuario.status === "pendente"
-        ? "Cadastro realizado! Seu acesso de órgão público será liberado após aprovação de um administrador."
-        : "Cadastro realizado com sucesso!"
+        ? "Cadastro feito! Seu acesso de órgão público será liberado após aprovação de um administrador."
+        : "Cadastro feito! Agora é só entrar.",
+      "sucesso"
     );
     window.location.href = "login.html";
   } catch (erro) {
     console.error("Erro no cadastro:", erro);
-    alert(erro.message);
-  } finally {
-    if (botao) botao.disabled = false;
+    toast(erro.message, "erro");
   }
 }

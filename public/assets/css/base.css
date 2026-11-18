@@ -1,0 +1,506 @@
+/* ─────────────────────────────────────────────────────────
+   base.css — usado por TODAS as páginas (app, login, cadastro).
+   Cores, tipografia, botões, campos, avisos (toasts) e diálogos.
+   Para mudar uma cor do site inteiro, mude só a variável aqui.
+
+   Identidade: preto + laranja "brasa". Fontes: Inter (texto)
+   e JetBrains Mono (números de monitoramento).
+   ───────────────────────────────────────────────────────── */
+
+:root {
+  /* Fundos (do mais escuro ao mais claro) */
+  --bg: #09090a;
+  --surface: #111113;
+  --surface-2: #17171a;
+  --surface-3: #1f1f23;
+  --borda: rgba(255, 255, 255, 0.07);
+  --borda-forte: rgba(255, 255, 255, 0.13);
+
+  /* Texto (contraste ≥ 4.5:1 sobre --surface) */
+  --texto: #f4f4f5;
+  --texto-2: #cfcfd4;
+  --texto-fraco: #9d9da6;
+
+  /* Marca */
+  --fogo: #ff5c1a;
+  --fogo-claro: #ff7a3d;
+  --fogo-escuro: #e5480a;
+  --fogo-suave: rgba(255, 92, 26, 0.12);
+  --fogo-borda: rgba(255, 92, 26, 0.35);
+  --brasa: #ff8c42;
+  --gradiente-fogo: linear-gradient(180deg, #ff6b2b 0%, #f24c0d 100%);
+  --brilho-fogo: 0 0 0 1px rgba(255, 92, 26, 0.4), 0 8px 24px -6px rgba(255, 92, 26, 0.55);
+
+  /* Estados */
+  --perigo: #ff4d4d;
+  --perigo-suave: rgba(255, 77, 77, 0.12);
+  --perigo-borda: rgba(255, 77, 77, 0.35);
+  --sucesso: #34d399;
+  --sucesso-suave: rgba(52, 211, 153, 0.12);
+  --sucesso-borda: rgba(52, 211, 153, 0.35);
+  --info: #60a5fa;
+  --info-suave: rgba(96, 165, 250, 0.12);
+  --info-borda: rgba(96, 165, 250, 0.35);
+  --verificacao: #fbbf24;
+  --verificacao-suave: rgba(251, 191, 36, 0.12);
+  --verificacao-borda: rgba(251, 191, 36, 0.35);
+  --falso: #a1a1aa;
+  --falso-suave: rgba(161, 161, 170, 0.12);
+  --falso-borda: rgba(161, 161, 170, 0.35);
+
+  /* Gravidade: escala do amarelo ao vermelho (lê como "temperatura") */
+  --grav-baixa: #facc15;
+  --grav-media: #ff8c42;
+  --grav-alta: #ff5c1a;
+  --grav-critica: #ff3b3b;
+
+  /* Forma */
+  --raio-sm: 8px;
+  --raio: 12px;
+  --raio-lg: 16px;
+  --sombra: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 12px 32px -12px rgba(0, 0, 0, 0.7);
+  --sombra-flutuante: 0 24px 60px -12px rgba(0, 0, 0, 0.8);
+  --foco: 0 0 0 3px rgba(255, 92, 26, 0.35);
+
+  --fonte: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fonte-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--texto);
+  font-family: var(--fonte);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01";
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--fogo-claro);
+  text-underline-offset: 3px;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+::selection {
+  background: rgba(255, 92, 26, 0.35);
+}
+
+/* Números de monitoramento: largura fixa, sem "pular" quando mudam */
+.num,
+.tabular-nums {
+  font-family: var(--fonte-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* Contorno de foco visível só para quem navega pelo teclado */
+:focus-visible {
+  outline: 2px solid var(--fogo);
+  outline-offset: 2px;
+}
+
+/* Esconde visualmente, mas mantém para leitores de tela */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* ── ÍCONES ── */
+.ico {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ico-sm { width: 14px; height: 14px; }
+.ico-lg { width: 22px; height: 22px; }
+.ico-xl { width: 28px; height: 28px; }
+
+/* Ícone dentro de um quadrado colorido (logo, cards de estatística, catálogo) */
+.ico-bloco {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--fogo-suave);
+  color: var(--fogo);
+  border: 1px solid var(--fogo-borda);
+  flex-shrink: 0;
+}
+
+.logo-bloco {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--gradiente-fogo);
+  color: #fff;
+  box-shadow: var(--brilho-fogo);
+  flex-shrink: 0;
+}
+
+/* ── BOTÕES ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--raio-sm);
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-primario {
+  background: var(--gradiente-fogo);
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 6px 16px -6px rgba(255, 92, 26, 0.6);
+}
+
+.btn-primario:hover:not(:disabled) {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, var(--brilho-fogo);
+  filter: brightness(1.06);
+}
+
+.btn-secundario {
+  background: var(--fogo-suave);
+  color: var(--fogo-claro);
+  border-color: var(--fogo-borda);
+}
+
+.btn-secundario:hover:not(:disabled) {
+  background: rgba(255, 92, 26, 0.2);
+}
+
+.btn-fantasma {
+  background: var(--surface-2);
+  color: var(--texto-2);
+  border-color: var(--borda-forte);
+}
+
+.btn-fantasma:hover:not(:disabled) {
+  color: var(--texto);
+  border-color: rgba(255, 255, 255, 0.24);
+  background: var(--surface-3);
+}
+
+.btn-perigo {
+  background: var(--perigo-suave);
+  color: var(--perigo);
+  border-color: var(--perigo-borda);
+}
+
+.btn-perigo:hover:not(:disabled) {
+  background: rgba(255, 77, 77, 0.2);
+}
+
+.btn-sucesso {
+  background: var(--sucesso-suave);
+  color: var(--sucesso);
+  border-color: var(--sucesso-borda);
+}
+
+.btn-sucesso:hover:not(:disabled) {
+  background: rgba(52, 211, 153, 0.2);
+}
+
+.btn-sm {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  gap: 6px;
+}
+
+.btn-sm .ico {
+  width: 15px;
+  height: 15px;
+}
+
+.btn-bloco {
+  width: 100%;
+}
+
+.btn-icone {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--texto-fraco);
+  border-radius: var(--raio-sm);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-icone:hover {
+  color: var(--texto);
+  background: var(--surface-3);
+}
+
+/* ── CAMPOS ── */
+.campo,
+.form-campo > input:not([type="radio"]):not([type="file"]),
+.form-campo > textarea,
+.form-campo > select {
+  width: 100%;
+  min-height: 42px;
+  background: var(--surface-2);
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio-sm);
+  color: var(--texto);
+  font-size: 14px;
+  padding: 10px 12px;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.campo::placeholder,
+.form-campo > input::placeholder,
+.form-campo > textarea::placeholder {
+  color: #6f6f78;
+}
+
+.campo:hover,
+.form-campo > input:hover,
+.form-campo > textarea:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.campo:focus,
+.form-campo > input:focus,
+.form-campo > textarea:focus,
+.form-campo > select:focus {
+  border-color: var(--fogo);
+  outline: none;
+  box-shadow: var(--foco);
+  background: var(--surface);
+}
+
+textarea.campo,
+.form-campo > textarea {
+  resize: vertical;
+  min-height: 96px;
+}
+
+/* ── AVISOS (TOASTS) ── */
+.toasts {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: min(400px, calc(100vw - 32px));
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(31, 31, 35, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio);
+  padding: 12px 12px 12px 14px;
+  color: var(--texto);
+  font-size: 14px;
+  box-shadow: var(--sombra-flutuante);
+  animation: toast-entra 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.toast-icone {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  color: var(--info);
+  background: var(--info-suave);
+}
+
+.toast-icone .ico {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.5;
+}
+
+.toast-sucesso .toast-icone {
+  color: var(--sucesso);
+  background: var(--sucesso-suave);
+}
+
+.toast-erro .toast-icone {
+  color: var(--perigo);
+  background: var(--perigo-suave);
+}
+
+.toast-texto {
+  flex: 1;
+  padding-top: 2px;
+}
+
+.toast .btn-icone {
+  width: 28px;
+  height: 28px;
+  margin: -2px -2px 0 0;
+}
+
+.toast.saindo {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+@keyframes toast-entra {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+/* ── DIÁLOGOS (<dialog>) ── */
+dialog.dialogo {
+  margin: auto;
+  background: var(--surface);
+  color: var(--texto);
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio-lg);
+  box-shadow: var(--sombra-flutuante);
+  padding: 24px;
+  width: min(420px, calc(100vw - 32px));
+  animation: dialogo-entra 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+dialog::backdrop {
+  background: rgba(5, 5, 6, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+@keyframes dialogo-entra {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+.dialogo-titulo {
+  font-size: 17px;
+  font-weight: 650;
+  margin-bottom: 8px;
+}
+
+.dialogo-texto {
+  color: var(--texto-2);
+  font-size: 14px;
+  margin-bottom: 22px;
+}
+
+.dialogo-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── CELULAR ── */
+@media (max-width: 600px) {
+  /* 16px evita o zoom automático do iPhone ao tocar no campo */
+  .campo,
+  .form-campo > input:not([type="radio"]):not([type="file"]),
+  .form-campo > textarea,
+  .form-campo > select {
+    font-size: 16px;
+  }
+
+  /* Área de toque mínima de 44px */
+  .btn {
+    min-height: 44px;
+  }
+
+  .btn-sm {
+    min-height: 38px;
+  }
+
+  .btn-icone {
+    width: 44px;
+    height: 44px;
+  }
+
+  .toasts {
+    left: 16px;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

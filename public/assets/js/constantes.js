@@ -14,7 +14,7 @@ const STATUS_ATIVOS = [STATUS.PENDENTE, STATUS.EM_VERIFICACAO];
 const GRAVIDADES = ["Baixa", "Média", "Alta", "Crítica"];
 
 const COR_GRAVIDADE = {
-  Baixa: "#29d17c",
+  Baixa: "#facc15",
   Média: "#ff8c42",
   Alta: "#ff5c1a",
   Crítica: "#ff3b3b",
@@ -47,6 +47,29 @@ function corDoStatus(valor) {
 
 function corDaGravidade(valor) {
   return COR_GRAVIDADE[valor] || COR_GRAVIDADE["Média"];
+}
+
+// Classes CSS (definidas em style.css) para cada status e gravidade.
+const CLASSE_STATUS = {
+  [STATUS.PENDENTE]: "st-pendente",
+  [STATUS.EM_VERIFICACAO]: "st-verificacao",
+  [STATUS.RESOLVIDA]: "st-resolvida",
+  [STATUS.ALARME_FALSO]: "st-falso",
+};
+
+const CLASSE_GRAVIDADE = {
+  Baixa: "grav-baixa",
+  Média: "grav-media",
+  Alta: "grav-alta",
+  Crítica: "grav-critica",
+};
+
+function classeStatus(valor) {
+  return CLASSE_STATUS[normalizarStatus(valor)];
+}
+
+function classeGravidade(valor) {
+  return CLASSE_GRAVIDADE[valor] || CLASSE_GRAVIDADE["Média"];
 }
 
 function isAtiva(denuncia) {

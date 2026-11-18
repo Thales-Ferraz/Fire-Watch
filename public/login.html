@@ -1,53 +1,78 @@
 <!doctype html>
-<html lang="pt-br">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#09090a" />
+    <title>Entrar · FireWatch</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/base.css" />
     <link rel="stylesheet" href="assets/css/login-cadastro.css" />
   </head>
 
   <body>
+    <script src="assets/js/icones.js"></script>
+
     <div class="auth-container">
-      <div class="auth-card">
-        <div class="logo">🔥 <span>FireWatch</span></div>
+      <section class="auth-hero" aria-hidden="true">
+        <a class="auth-marca" href="firewatch.html" tabindex="-1">
+          <span class="logo-bloco"><svg class="ico"><use href="#i-flame"></use></svg></span>
+          <span class="auth-marca-texto">Fire<span>Watch</span></span>
+        </a>
+        <h1 class="auth-hero-titulo">Viu fumaça?<br /><span>Avise em segundos.</span></h1>
+        <p class="auth-hero-texto">
+          O FireWatch conecta quem vê um foco de incêndio a quem pode apagá-lo.
+        </p>
+        <ul class="auth-pontos">
+          <li><svg class="ico"><use href="#i-pino"></use></svg> Denúncia com localização no mapa</li>
+          <li><svg class="ico"><use href="#i-atividade"></use></svg> Acompanhe o status em tempo real</li>
+          <li><svg class="ico"><use href="#i-escudo"></use></svg> Órgãos públicos verificam cada caso</li>
+        </ul>
+      </section>
+
+      <main class="auth-card">
+        <a class="auth-marca auth-marca-mobile" href="firewatch.html">
+          <span class="logo-bloco"><svg class="ico" aria-hidden="true"><use href="#i-flame"></use></svg></span>
+          <span class="auth-marca-texto">Fire<span>Watch</span></span>
+        </a>
 
         <h2>Entrar</h2>
-        <p class="subtitle">Acesse sua conta para acompanhar as denúncias.</p>
+        <p class="subtitle">Acesse sua conta para registrar e acompanhar denúncias.</p>
 
         <form id="formLogin">
           <div class="form-group">
             <label for="username">Usuário</label>
-            <input
-              type="text"
-              id="username"
-              placeholder="Digite seu usuário"
-              required
-            />
+            <input type="text" id="username" autocomplete="username" placeholder="Seu usuário" required />
           </div>
 
           <div class="form-group">
             <label for="password">Senha</label>
-            <input
-              type="password"
-              id="password"
-              placeholder="Digite sua senha"
-              required
-            />
+            <input type="password" id="password" autocomplete="current-password" placeholder="Sua senha" required />
           </div>
 
-          <button type="submit" class="btn-auth">Entrar</button>
+          <button type="submit" class="btn btn-primario btn-bloco btn-auth">
+            Entrar <svg class="ico" aria-hidden="true"><use href="#i-entrar"></use></svg>
+          </button>
         </form>
 
-        <a href="cadastro_pessoa.html" class="link">
-          Não possui cadastro? Cadastre-se
+        <p class="auth-rodape">
+          Ainda não tem conta? <a href="cadastro_pessoa.html">Cadastre-se</a>
+        </p>
+        <a class="auth-voltar" href="firewatch.html">
+          <svg class="ico ico-sm" aria-hidden="true"><use href="#i-voltar"></use></svg> Ver o mapa sem entrar
         </a>
-      </div>
+      </main>
     </div>
 
     <script src="assets/js/config.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/api.js"></script>
+    <script src="assets/js/ui.js"></script>
     <script src="assets/js/login.js"></script>
   </body>
 </html>

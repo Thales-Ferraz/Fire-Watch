@@ -40,7 +40,7 @@ async function abrirDashboard() {
     mainContent.innerHTML = dashboardHtml;
   } catch (erro) {
     console.error(erro);
-    mainContent.innerHTML = `<p style="color: #ff3b3b; text-align: center; padding: 20px;">⚠️ Erro ao carregar o Dashboard.</p>`;
+    mainContent.innerHTML = `<p class="estado-erro">Erro ao carregar o Dashboard.</p>`;
     return;
   }
 
@@ -139,28 +139,25 @@ function preencherRecentes(denuncias) {
   if (total) total.textContent = `${recentes.length} de ${denuncias.filter(isAtiva).length} ativas`;
 
   if (!recentes.length) {
-    lista.innerHTML = `<div style="padding: 24px; text-align: center; color: #8a9099; font-size: 14px;">
-      Nenhum foco ativo no momento.</div>`;
+    lista.innerHTML = `<p class="estado-vazio">Nenhum foco ativo no momento.</p>`;
     return;
   }
 
-  const icone = { Baixa: "🌫️", Média: "🔥", Alta: "🔥", Crítica: "🚨" };
+  const iconePorGravidade = { Baixa: "fumaca", Média: "flame", Alta: "flame", Crítica: "sirene" };
 
-  lista.innerHTML = recentes.map((d) => {
-    const c = corDoStatus(d.status);
-    return `
+  lista.innerHTML = recentes.map((d) => `
       <div class="incident-item">
-        <div class="inc-icon">${icone[d.gravidade] || "🔥"}</div>
+        <span class="inc-icon ${classeGravidade(d.gravidade)}">${icone(iconePorGravidade[d.gravidade] || "flame")}</span>
         <div class="inc-info">
           <div class="inc-name">${escapeHTML(d.local)}</div>
           <div class="inc-meta">
-            ${escapeHTML(d.data)}${d.horario ? " · " + escapeHTML(d.horario) : ""} · Gravidade
-            <span style="color: ${corDaGravidade(d.gravidade)}; font-weight: 600;">${escapeHTML(d.gravidade)}</span>
+            <span class="num">${escapeHTML(formatarData(d.data))}${d.horario ? " · " + escapeHTML(d.horario) : ""}</span>
+            <span aria-hidden="true">·</span>
+            <span class="texto-grav ${classeGravidade(d.gravidade)}">${escapeHTML(d.gravidade)}</span>
           </div>
         </div>
-        <span class="badge" style="background: ${c.bg}; color: ${c.cor};">${escapeHTML(d.status)}</span>
-      </div>`;
-  }).join("");
+        <span class="status ${classeStatus(d.status)}">${escapeHTML(d.status)}</span>
+      </div>`).join("");
 }
 
 function renderGraficoPorEstado(denuncias) {
@@ -172,8 +169,7 @@ function renderGraficoPorEstado(denuncias) {
   if (total) total.textContent = `${validas.length} denúncia${validas.length !== 1 ? "s" : ""}`;
 
   if (!window.Chart) {
-    canvas.parentElement.innerHTML = `<p style="color:#8a9099;text-align:center;padding:20px;">
-      Não foi possível carregar a biblioteca de gráficos.</p>`;
+    canvas.parentElement.innerHTML = `<p class="estado-vazio">Não foi possível carregar a biblioteca de gráficos.</p>`;
     return;
   }
 
@@ -185,10 +181,14 @@ function renderGraficoPorEstado(denuncias) {
   const ordenados = Object.entries(contagem).sort((a, b) => b[1] - a[1]);
   const labels = ordenados.map(([estado]) => estado);
   const valores = ordenados.map(([, qtd]) => qtd);
-  const cores = ["#ff5c1a", "#ff8c42", "#ff3b3b", "#29d17c", "#4db8ff", "#d4d400"];
+  // Uma só série = uma só cor (laranja da marca). "Outros" fica em cinza, porque não é um estado.
+  const corBarra = labels.map((l) => (l === "Outros" ? "rgba(161,161,170,0.45)" : "rgba(255,92,26,0.85)"));
+  const corBarraHover = labels.map((l) => (l === "Outros" ? "rgba(161,161,170,0.7)" : "#ff7a3d"));
 
   // Destrói o gráfico anterior antes de criar outro (evita vazamento de memória).
   if (graficoAtual) graficoAtual.destroy();
+
+  const fonte = { family: getComputedStyle(document.body).fontFamily };
 
   graficoAtual = new Chart(canvas.getContext("2d"), {
     type: "bar",
@@ -197,10 +197,12 @@ function renderGraficoPorEstado(denuncias) {
       datasets: [{
         label: "Denúncias",
         data: valores,
-        backgroundColor: labels.map((_, i) => cores[i % cores.length] + "cc"),
-        borderColor: labels.map((_, i) => cores[i % cores.length]),
-        borderWidth: 1,
+        backgroundColor: corBarra,
+        hoverBackgroundColor: corBarraHover,
         borderRadius: 6,
+        borderSkipped: false,
+        barThickness: "flex",
+        maxBarThickness: 28,
       }],
     },
     options: {
@@ -210,26 +212,32 @@ function renderGraficoPorEstado(denuncias) {
       plugins: {
         legend: { display: false },
         tooltip: {
+          backgroundColor: "rgba(31,31,35,0.95)",
+          borderColor: "rgba(255,255,255,0.13)",
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8,
+          titleFont: { ...fonte, weight: "600" },
+          bodyFont: fonte,
+          displayColors: false,
           callbacks: {
-            label: (ctx) => ` ${ctx.parsed.x} denúncia${ctx.parsed.x !== 1 ? "s" : ""}`,
+            label: (ctx) => `${ctx.parsed.x} denúncia${ctx.parsed.x !== 1 ? "s" : ""}`,
           },
         },
       },
       scales: {
         x: {
-          ticks: { color: "#8a9099", stepSize: 1, precision: 0 },
-          grid: { color: "#2a2d30" },
-          border: { color: "#2a2d30" },
+          ticks: { color: "#9d9da6", stepSize: 1, precision: 0, font: fonte },
+          grid: { color: "rgba(255,255,255,0.06)" },
+          border: { display: false },
         },
         y: {
-          ticks: { color: "#c4c8cd", font: { size: 13, weight: "600" } },
+          ticks: { color: "#cfcfd4", font: { ...fonte, size: 13, weight: "600" } },
           grid: { display: false },
-          border: { color: "#2a2d30" },
+          border: { display: false },
         },
       },
     },
   });
 }
 
-// Ponto de entrada único da página.
-document.addEventListener("DOMContentLoaded", abrirDashboard);

@@ -1,91 +1,94 @@
 <section class="sistema">
-  <button type="button" class="btn-fechar" onclick="fecharModal()">
-    &times;
-  </button>
-  <h1>Denunciar Foco de Incêndio</h1>
-  <form id="formDenuncia">
-    <mapbox-search-box 
-      id="local-busca"
-      placeholder="Ex: Parque Municipal, Belo Horizonte"
-      proximity="-43.9352,-19.9208"
-      theme='{
-        "variables": {
-        "fontFamily": "sans-serif",
-        "borderRadius": "6px",
-        "fontSize": "12px",
-        "unit": "10px"
-        }
-      }'>
-    </mapbox-search-box>
-
+  <div class="modal-cabecalho">
+    <span class="logo-bloco"><svg class="ico" aria-hidden="true"><use href="#i-flame"></use></svg></span>
     <div>
-      <label>Data:</label>
+      <h2 id="tituloDenuncia">Denunciar foco de incêndio</h2>
+      <p class="modal-sub">Leva menos de um minuto. Em caso de risco à vida, ligue <strong>193</strong>.</p>
+    </div>
+    <button type="button" class="btn-icone" onclick="fecharModal()" aria-label="Fechar formulário">
+      <svg class="ico" aria-hidden="true"><use href="#i-fechar"></use></svg>
+    </button>
+  </div>
+
+  <form id="formDenuncia" novalidate>
+    <div class="form-campo">
+      <span class="form-rotulo" id="rotuloLocal">Local do foco *</span>
+      <mapbox-search-box
+        id="local-busca"
+        placeholder="Ex: Parque Municipal, Belo Horizonte"
+        proximity="-43.9352,-19.9208"
+        theme='{
+          "variables": {
+            "fontFamily": "Inter, system-ui, sans-serif",
+            "unit": "14px",
+            "padding": "1.05em",
+            "borderRadius": "8px",
+            "border": "none",
+            "boxShadow": "0 0 0 1px rgba(255,255,255,0.13)",
+            "colorBackground": "#17171a",
+            "colorBackgroundHover": "#1f1f23",
+            "colorBackgroundActive": "#2a1a12",
+            "colorText": "#f4f4f5",
+            "colorSecondary": "#9d9da6",
+            "colorPrimary": "#ff5c1a"
+          }
+        }'>
+      </mapbox-search-box>
+      <p class="form-ajuda" id="ajudaLocal">Digite o endereço e escolha uma opção da lista.</p>
+    </div>
+
+    <div class="form-campo">
+      <label for="data">Data do foco *</label>
       <input type="date" id="data" required />
     </div>
 
-    <div class="field" style="margin-bottom: 0; margin-top: 18px">
-      <label>Gravidade</label>
+    <fieldset class="form-campo">
+      <legend class="form-rotulo">Gravidade</legend>
       <div class="gravidade-grid">
         <div>
-          <input
-            type="radio"
-            name="gravidade"
-            id="g-baixa"
-            value="Baixa"
-            class="grav-opt"
-            checked=""
-          />
-          <label class="grav-label" for="g-baixa">
-            <span class="dot dot-green"></span> Baixa
+          <input type="radio" name="gravidade" id="g-baixa" value="Baixa" class="grav-opt" checked />
+          <label class="grav-label grav-baixa" for="g-baixa">
+            <span class="dot" aria-hidden="true"></span> Baixa
           </label>
         </div>
         <div>
-          <input
-            type="radio"
-            name="gravidade"
-            id="g-media"
-            value="Média"
-            class="grav-opt"
-          />
-          <label class="grav-label" for="g-media">
-            <span class="dot dot-ember"></span> Média
+          <input type="radio" name="gravidade" id="g-media" value="Média" class="grav-opt" />
+          <label class="grav-label grav-media" for="g-media">
+            <span class="dot" aria-hidden="true"></span> Média
           </label>
         </div>
         <div>
-          <input
-            type="radio"
-            name="gravidade"
-            id="g-alta"
-            value="Alta"
-            class="grav-opt"
-          />
-          <label class="grav-label" for="g-alta">
-            <span class="dot dot-fire"></span> Alta
+          <input type="radio" name="gravidade" id="g-alta" value="Alta" class="grav-opt" />
+          <label class="grav-label grav-alta" for="g-alta">
+            <span class="dot" aria-hidden="true"></span> Alta
           </label>
         </div>
         <div>
-          <input
-            type="radio"
-            name="gravidade"
-            id="g-critica"
-            value="Crítica"
-            class="grav-opt"
-          />
-          <label class="grav-label" for="g-critica">
-            <span class="dot dot-danger"></span> Crítica
+          <input type="radio" name="gravidade" id="g-critica" value="Crítica" class="grav-opt" />
+          <label class="grav-label grav-critica" for="g-critica">
+            <span class="dot" aria-hidden="true"></span> Crítica
           </label>
         </div>
       </div>
+    </fieldset>
+
+    <div class="form-campo">
+      <label for="descricao">Descrição</label>
+      <textarea id="descricao" rows="4" maxlength="2000"
+                placeholder="O que você está vendo? Fumaça, chamas, área atingida…"></textarea>
     </div>
 
-    <div>
-      <label>Descrição:</label>
-      <textarea id="descricao" rows="4"></textarea>
+    <div class="form-campo">
+      <span class="form-rotulo">Foto (opcional)</span>
+      <label class="campo-foto" for="foto">
+        <svg class="ico ico-lg" aria-hidden="true"><use href="#i-camera"></use></svg>
+        <span id="fotoNome">Toque para tirar ou escolher uma foto</span>
+      </label>
+      <input type="file" id="foto" class="sr-only" accept="image/*" />
     </div>
-    <div>
-      <label>Foto (opcional):</label>
-      <input type="file" id="foto" accept="image/*" />
-    </div>
-    <button type="submit">Enviar Denúncia</button>
+
+    <button type="submit" class="btn btn-primario btn-bloco btn-enviar">
+      <svg class="ico" aria-hidden="true"><use href="#i-flame"></use></svg> Enviar denúncia
+    </button>
   </form>
 </section>

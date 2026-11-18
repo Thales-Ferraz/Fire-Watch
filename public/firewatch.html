@@ -2,8 +2,16 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#09090a" />
     <title>FireWatch – Monitoramento de Queimadas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/base.css" />
     <link rel="stylesheet" href="assets/css/style.css" />
     <link
       href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css"
@@ -14,112 +22,124 @@
   </head>
 
   <body>
-    <nav class="sidebar">
+    <script src="assets/js/icones.js"></script>
+
+    <nav class="sidebar" id="menuLateral" aria-label="Menu principal">
       <div class="sidebar-logo">
-        <span class="flame-icon">🔥</span>
-        Fire<span>Watch</span>
+        <span class="logo-bloco"><svg class="ico" aria-hidden="true"><use href="#i-flame"></use></svg></span>
+        <span class="logo-texto">Fire<span>Watch</span></span>
+        <button type="button" class="btn-icone sidebar-fechar" onclick="fecharMenu()" aria-label="Fechar menu">
+          <svg class="ico" aria-hidden="true"><use href="#i-fechar"></use></svg>
+        </button>
       </div>
 
       <div class="sidebar-nav">
-        <button
-          class="nav-item active"
-          onclick="(setNav(this), abrirDashboard())"
-        >
-          <span class="icon">▦</span> Dashboard
-        </button>
+        <p class="nav-secao">Monitoramento</p>
+        <a class="nav-item" href="#/dashboard" data-rota="dashboard">
+          <svg class="ico" aria-hidden="true"><use href="#i-dashboard"></use></svg> Dashboard
+        </a>
+        <a class="nav-item" href="#/historico" data-rota="historico">
+          <svg class="ico" aria-hidden="true"><use href="#i-historico"></use></svg> Minhas denúncias
+        </a>
 
-        <button class="nav-item" onclick="(setNav(this), abrirHistorico())">
-          <span class="icon">⏱</span> Histórico
-          <span class="nav-badge"></span>
-        </button>
-
-        <button class="nav-item" onclick="(setNav(this), abrirForum())">
-          <span class="icon">💬</span> Fórum
-        </button>
-
-        <button class="nav-item" onclick="(setNav(this), abrirCatalogo())">
-          <span class="icon">⚠️</span> Catálogo de Prevenção
-        </button>
+        <p class="nav-secao">Comunidade</p>
+        <a class="nav-item" href="#/forum" data-rota="forum">
+          <svg class="ico" aria-hidden="true"><use href="#i-forum"></use></svg> Fórum
+        </a>
+        <a class="nav-item" href="#/catalogo" data-rota="catalogo">
+          <svg class="ico" aria-hidden="true"><use href="#i-livro"></use></svg> Prevenção
+        </a>
 
         <!-- ÁREA EXCLUSIVA DO ÓRGÃO -->
-        <div id="areaOrgao" style="display: none">
-          <button
-            class="nav-item"
-            onclick="(setNav(this), abrirGerenciarDenuncias())"
-          >
-            <span class="icon">📋</span> Gerenciar Denúncias
-          </button>
+        <div id="areaOrgao" class="nav-grupo" hidden>
+          <p class="nav-secao">Órgão público</p>
+          <a class="nav-item" href="#/gerenciar" data-rota="gerenciar">
+            <svg class="ico" aria-hidden="true"><use href="#i-prancheta"></use></svg> Gerenciar denúncias
+          </a>
         </div>
 
         <!-- ÁREA EXCLUSIVA DO ADMINISTRADOR -->
-        <div id="areaAdmin" style="display: none">
-          <button
-            class="nav-item"
-            onclick="(setNav(this), abrirAprovacaoOrgaos())"
-          >
-            <span class="icon">🛡️</span> Aprovar Órgãos
-          </button>
+        <div id="areaAdmin" class="nav-grupo" hidden>
+          <a class="nav-item" href="#/aprovar" data-rota="aprovar">
+            <svg class="ico" aria-hidden="true"><use href="#i-escudo"></use></svg> Aprovar órgãos
+          </a>
         </div>
 
-        <div style="margin-top: auto; padding-top: 16px">
-          <button class="nav-report" onclick="abrirModal()">
-            <span class="icon">＋</span> Nova Denúncia
-          </button>
+        <div class="nav-rodape">
+          <div class="nav-cta">
+            <p class="nav-cta-titulo">Viu fumaça ou fogo?</p>
+            <p class="nav-cta-texto">Avise agora. Cada minuto conta.</p>
+            <button type="button" class="btn btn-primario btn-bloco" onclick="(fecharMenu(), abrirModal())">
+              <svg class="ico" aria-hidden="true"><use href="#i-mais"></use></svg> Nova denúncia
+            </button>
+          </div>
+          <p class="nav-emergencia">Emergência: ligue <strong>193</strong></p>
         </div>
       </div>
     </nav>
 
+    <!-- Fundo escuro atrás do menu aberto no celular -->
+    <div class="sidebar-fundo" onclick="fecharMenu()"></div>
+
     <div class="main">
-      <header>
+      <header class="topo">
+        <button type="button" class="btn-icone btn-menu" onclick="abrirMenu()"
+                aria-label="Abrir menu" aria-controls="menuLateral" aria-expanded="false">
+          <svg class="ico ico-lg" aria-hidden="true"><use href="#i-menu"></use></svg>
+        </button>
+
         <div class="header-left">
-          <div class="header-title">Dashboard de Monitoramento</div>
-          <div class="header-sub">
-            Canal transparente de dados e focos ativos de incêndio em tempo real
-          </div>
+          <h1 class="header-title">Monitoramento</h1>
+          <p class="header-sub">Canal transparente de dados e focos ativos de incêndio em tempo real</p>
         </div>
 
         <div class="header-right">
+          <span class="ao-vivo" title="Dados atualizados a cada denúncia">
+            <span class="ao-vivo-ponto" aria-hidden="true"></span> Ao vivo
+          </span>
+
           <!-- VISÍVEL QUANDO NÃO ESTIVER LOGADO -->
           <div id="areaVisitante">
-            <button
-              class="btn-login"
-              onclick="window.location.href = 'login.html'"
-            >
-              Entrar
-            </button>
-            <button
-              class="btn-register"
-              onclick="window.location.href = 'cadastro_pessoa.html'"
-            >
-              Cadastrar-se
-            </button>
+            <a class="btn btn-fantasma btn-sm" href="login.html">Entrar</a>
+            <a class="btn btn-primario btn-sm" href="cadastro_pessoa.html">Criar conta</a>
           </div>
 
           <!-- VISÍVEL QUANDO ESTIVER LOGADO -->
-          <div
-            id="areaUsuario"
-            style="display: none; align-items: center; gap: 12px"
-          >
-            <span id="nomeUsuario"></span>
-            <button class="btn-login" onclick="logout()">Sair</button>
+          <div id="areaUsuario" hidden>
+            <span class="usuario-chip">
+              <span class="avatar" id="avatarUsuario" aria-hidden="true"></span>
+              <span id="nomeUsuario"></span>
+            </span>
+            <button type="button" class="btn-icone" onclick="logout()" aria-label="Sair da conta" title="Sair">
+              <svg class="ico" aria-hidden="true"><use href="#i-sair"></use></svg>
+            </button>
           </div>
         </div>
       </header>
 
-      <div class="content">
-        <p class="carregando">Carregando dashboard…</p>
-      </div>
+      <main class="content" tabindex="-1">
+        <p class="carregando">Carregando…</p>
+      </main>
     </div>
 
-    <div id="modalDenuncia" class="modal-overlay">
+    <!-- Atalho para denunciar no celular (fica ao alcance do polegar) -->
+    <button type="button" class="fab" onclick="abrirModal()">
+      <svg class="ico ico-lg" aria-hidden="true"><use href="#i-flame"></use></svg>
+      Denunciar
+    </button>
+
+    <!-- Formulário de nova denúncia (conteúdo vem de denuncia.html) -->
+    <dialog id="modalDenuncia" class="modal-denuncia" aria-labelledby="tituloDenuncia">
       <div id="conteudoModal"></div>
-    </div>
+    </dialog>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="assets/js/config.js"></script>
     <script src="assets/js/constantes.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/api.js"></script>
+    <script src="assets/js/ui.js"></script>
+    <script src="assets/js/componentes.js"></script>
     <script src="assets/js/home-auth.js"></script>
     <script src="assets/js/admin.js"></script>
     <script src="assets/js/historico.js"></script>
@@ -129,5 +149,6 @@
     <script src="assets/js/mapa.js"></script>
     <script src="assets/js/dashboard.js"></script>
     <script src="assets/js/forum.js"></script>
+    <script src="assets/js/router.js"></script>
   </body>
 </html>

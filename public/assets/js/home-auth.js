@@ -1,19 +1,21 @@
-// Mostra/esconde áreas do menu conforme o usuário logado.
+// Mostra/esconde áreas do menu e do cabeçalho conforme o usuário logado.
 // (Só visual: as permissões de verdade são checadas pelo servidor.)
 function aplicarPerfilNaTela() {
   const usuario = getUsuarioLogado();
+  const mostrar = (id, visivel) => {
+    const el = document.getElementById(id);
+    if (el) el.hidden = !visivel;
+  };
 
-  const areaVisitante = document.getElementById("areaVisitante");
-  const areaUsuario = document.getElementById("areaUsuario");
-  const nomeUsuario = document.getElementById("nomeUsuario");
-  const areaOrgao = document.getElementById("areaOrgao");
-  const areaAdmin = document.getElementById("areaAdmin");
+  mostrar("areaVisitante", !usuario);
+  mostrar("areaUsuario", !!usuario);
+  mostrar("areaOrgao", isOrgao());
+  mostrar("areaAdmin", isAdmin());
 
-  if (areaVisitante) areaVisitante.style.display = usuario ? "none" : "flex";
-  if (areaUsuario) areaUsuario.style.display = usuario ? "flex" : "none";
-  if (nomeUsuario) nomeUsuario.textContent = usuario ? `Olá, ${usuario.nome}` : "";
-  if (areaOrgao) areaOrgao.style.display = isOrgao() ? "block" : "none";
-  if (areaAdmin) areaAdmin.style.display = isAdmin() ? "block" : "none";
+  const nome = document.getElementById("nomeUsuario");
+  if (nome) nome.textContent = usuario ? usuario.nome.split(" ")[0] : "";
+  const avatar = document.getElementById("avatarUsuario");
+  if (avatar) avatar.textContent = usuario ? usuario.nome.trim().charAt(0).toUpperCase() : "";
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -26,7 +28,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const { usuario } = await apiFetch("/auth/me");
     salvarSessao(getToken(), usuario);
   } catch (erro) {
-    if (erro.status === 401) limparSessao();
+    if (erro.status === 401) {
+      limparSessao();
+      toast("Sua sessão expirou. Entre novamente.", "info");
+    }
   }
   aplicarPerfilNaTela();
 });
