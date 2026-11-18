@@ -218,6 +218,17 @@ header {
   color: #f0f2f4;
 }
 
+/* O atributo hidden precisa vencer o display:flex do .alert */
+.alert[hidden] {
+  display: none;
+}
+
+.carregando {
+  color: #8a9099;
+  text-align: center;
+  padding: 40px 0;
+}
+
 /* Stats */
 .stats {
   display: grid;

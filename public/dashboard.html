@@ -1,31 +1,28 @@
-<div class="alert">
+<div id="dashAlerta" class="alert" hidden>
   ⚠️
-  <span>
-    <strong>Alerta ativo:</strong> 3 focos críticos em Minas Gerais com risco de
-    expansão.
-  </span>
+  <span id="dashAlertaTexto"></span>
 </div>
 
-<div class="stats">
+<div class="stats" id="dashStats">
   <div class="stat-card c-fire">
     <div class="stat-label">Denúncias em verificação</div>
-    <div class="stat-value fire">—</div>
-    <div class="stat-note">aguardando dados</div>
+    <div class="stat-value fire" data-card="emVerificacao">—</div>
+    <div class="stat-note" data-nota="emVerificacao">carregando…</div>
   </div>
   <div class="stat-card c-danger">
     <div class="stat-label">Denúncias pendentes</div>
-    <div class="stat-value danger">—</div>
-    <div class="stat-note">aguardando dados</div>
+    <div class="stat-value danger" data-card="pendentes">—</div>
+    <div class="stat-note" data-nota="pendentes">carregando…</div>
   </div>
   <div class="stat-card c-ember">
     <div class="stat-label">Focos do dia</div>
-    <div class="stat-value ember">—</div>
-    <div class="stat-note">aguardando dados</div>
+    <div class="stat-value ember" data-card="focosHoje">—</div>
+    <div class="stat-note" data-nota="focosHoje">carregando…</div>
   </div>
   <div class="stat-card c-green">
-    <div class="stat-label">Resolvidos hoje</div>
-    <div class="stat-value green">—</div>
-    <div class="stat-note">aguardando dados</div>
+    <div class="stat-label">Resolvidas hoje</div>
+    <div class="stat-value green" data-card="resolvidasHoje">—</div>
+    <div class="stat-note" data-nota="resolvidasHoje">carregando…</div>
   </div>
 </div>
 
@@ -33,7 +30,7 @@
   <div class="map-box">
     <div class="map-header">
       <span style="font-size: 16px">🔥</span>
-      <h3>Mapa de Focos</h3>
+      <h3>Mapa de Focos Ativos</h3>
     </div>
 
     <div style="flex: 1; position: relative">
@@ -44,5 +41,21 @@
     </div>
   </div>
 
-  <div class="incidents-box"></div>
+  <div class="incidents-box">
+    <div class="incidents-header">
+      Denúncias por Estado
+      <span id="dashGraficoTotal"></span>
+    </div>
+    <div style="padding: 16px; height: 330px; position: relative">
+      <canvas id="graficoEstados" aria-label="Gráfico de denúncias por estado" role="img"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="incidents-box" style="margin-top: 14px">
+  <div class="incidents-header">
+    Ocorrências recentes
+    <span id="dashRecentesTotal"></span>
+  </div>
+  <div id="dashRecentes"></div>
 </div>

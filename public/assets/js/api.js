@@ -51,9 +51,9 @@ function escapeHTML(valor) {
     .replace(/'/g, "&#39;");
 }
 
-// Só aceita imagens em data URL (formato que o próprio app gera).
-function urlImagemSegura(valor) {
-  return typeof valor === "string" && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(valor)
-    ? valor
-    : "";
+// Endereço completo de uma foto salva pelo servidor (ex.: "/uploads/abc.jpg").
+// Só aceita esse formato; qualquer outra coisa vira "" (sem foto).
+function urlFoto(valor) {
+  if (typeof valor !== "string" || !/^\/uploads\/[A-Za-z0-9_-]+\.(jpg|png|webp)$/.test(valor)) return "";
+  return API_URL.replace(/\/api$/, "") + valor;
 }

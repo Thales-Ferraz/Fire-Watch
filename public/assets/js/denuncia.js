@@ -7,6 +7,13 @@ function setNav(el) {
 
 // Funções para controle do Modal
 async function abrirModal() {
+  if (!isLogado()) {
+    if (confirm("Você precisa entrar na sua conta para fazer uma denúncia. Ir para o login?")) {
+      window.location.href = "login.html";
+    }
+    return;
+  }
+
   const modal = document.getElementById("modalDenuncia");
   const conteudo = document.getElementById("conteudoModal");
 
@@ -32,6 +39,11 @@ function inicializarFormulario() {
   const searchBox = document.getElementById("local-busca");
   searchBox.accessToken = MAPBOX_TOKEN; // token centralizado em config.js
 
+  // A data do foco começa em "hoje" e não pode ser no futuro.
+  const campoData = document.getElementById("data");
+  campoData.max = hojeLocal();
+  campoData.value = hojeLocal();
+
   // Variáveis para guardar as coordenadas que o Mapbox encontrar na lista
   let longitudeSelecionada = null;
   let latitudeSelecionada = null;
@@ -49,8 +61,13 @@ function inicializarFormulario() {
       console.log("Local selecionado com sucesso:", nomeLocalSelecionado, longitudeSelecionada, latitudeSelecionada);
   });
 
+  const botaoEnviar = form.querySelector("button[type=submit]");
+  const textoBotao = botaoEnviar ? botaoEnviar.textContent : "";
+  let enviando = false;
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (enviando) return; // evita denúncia duplicada com duplo clique
 
     // Se o usuário digitou mas não clicou em uma sugestão válida da lista do Mapbox
     if (!longitudeSelecionada || !latitudeSelecionada) {
@@ -63,45 +80,35 @@ function inicializarFormulario() {
       return;
     }
 
+    if (!campoData.value || campoData.value > hojeLocal()) {
+      alert("Informe uma data válida (não pode ser no futuro).");
+      return;
+    }
+
     const gravidadeSelecionada = document.querySelector('input[name="gravidade"]:checked');
+
+    enviando = true;
+    if (botaoEnviar) {
+      botaoEnviar.disabled = true;
+      botaoEnviar.textContent = "Enviando…";
+    }
 
     /* FOTO */
     let fotoBase64 = null;
-const fotoInput = document.getElementById("foto");
-if (fotoInput && fotoInput.files[0]) {
-  fotoBase64 = await new Promise((resolve) => {
-    const img = new Image();
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      img.src = e.target.result;
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const maxSize = 800;
-        let width = img.width;
-        let height = img.height;
-
-        // Redimensiona mantendo proporção
-        if (width > height && width > maxSize) {
-          height = (height * maxSize) / width;
-          width = maxSize;
-        } else if (height > maxSize) {
-          width = (width * maxSize) / height;
-          height = maxSize;
+    const fotoInput = document.getElementById("foto");
+    if (fotoInput && fotoInput.files[0]) {
+      try {
+        fotoBase64 = await comprimirFoto(fotoInput.files[0]);
+      } catch (erro) {
+        alert(erro.message);
+        enviando = false;
+        if (botaoEnviar) {
+          botaoEnviar.disabled = false;
+          botaoEnviar.textContent = textoBotao;
         }
-
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
-
-        // Comprime para JPEG com 70% de qualidade
-        resolve(canvas.toDataURL("image/jpeg", 0.7));
-      };
-    };
-
-    reader.readAsDataURL(fotoInput.files[0]);
-  });
-}
+        return;
+      }
+    }
 
 
     // O autor e o status inicial ("Pendente") são definidos pelo servidor, a partir do token.
@@ -121,11 +128,46 @@ if (fotoInput && fotoInput.files[0]) {
       alert("Denúncia cadastrada com sucesso!");
       form.reset();
       fecharModal();
-      window.location.reload(); // Recarrega a página para atualizar o mapa principal
+      // Atualiza só os dados do dashboard (se estiver aberto), sem recarregar a página.
+      atualizarDashboard();
     } catch (erro) {
       console.error(erro);
       alert(erro.message);
+    } finally {
+      enviando = false;
+      if (botaoEnviar) {
+        botaoEnviar.disabled = false;
+        botaoEnviar.textContent = textoBotao;
+      }
     }
+  });
+}
+
+// Reduz a foto para no máximo 800px e converte para JPEG (qualidade 70%).
+// Rejeita se o arquivo não for uma imagem que o navegador consiga abrir.
+function comprimirFoto(arquivo) {
+  return new Promise((resolve, reject) => {
+    if (!arquivo.type.startsWith("image/")) {
+      reject(new Error("O arquivo escolhido não é uma imagem."));
+      return;
+    }
+    const url = URL.createObjectURL(arquivo);
+    const img = new Image();
+    img.onload = () => {
+      const maxSize = 800;
+      const escala = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * escala);
+      canvas.height = Math.round(img.height * escala);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", 0.7));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Não foi possível ler a imagem escolhida."));
+    };
+    img.src = url;
   });
 }
 

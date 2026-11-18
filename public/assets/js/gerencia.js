@@ -29,23 +29,30 @@ function renderGerenciar(denuncias) {
 
   const cards = denuncias
     .map((d) => {
-      const corGravidade =
-        {
-          Baixa: "#29d17c",
-          Média: "#ff8c42",
-          Alta: "#ff5c1a",
-          Crítica: "#ff3b3b",
-        }[d.gravidade] || "#ff8c42";
-
-      const corStatus = {
-        "Pendente": { bg: "#0a1a2a", cor: "#4db8ff" },
-        "Resolvida": { bg: "#0f200f", cor: "#29d17c" },
-        "Alarme Falso": { bg: "#2a2a00", cor: "#d4d400" },
-        "Em verificação": { bg: "#35250d", cor: "#e88e44" },
-      }[d.status] || { bg: "#35250d", cor: "#e88e44" };
+      const corGravidade = corDaGravidade(d.gravidade);
+      const statusAtual = normalizarStatus(d.status);
+      const corStatus = corDoStatus(statusAtual);
 
       const id = escapeHTML(d.id);
-      const foto = urlImagemSegura(d.foto);
+      const foto = urlFoto(d.foto);
+
+      // Um botão para cada status; o status atual fica marcado e desabilitado.
+      const botoesStatus = Object.values(STATUS).map((s) => {
+        const c = COR_STATUS[s];
+        const atual = s === statusAtual;
+        return `
+          <button
+            onclick="atualizarStatus(this.dataset.id, this.dataset.status)"
+            data-id="${id}" data-status="${escapeHTML(s)}"
+            ${atual ? 'disabled aria-pressed="true"' : ""}
+            style="
+              padding: 8px; border-radius: 6px;
+              background: ${atual ? c.borda : c.bg}; color: ${atual ? "#fff" : c.cor};
+              font-size: 12px; font-weight: 600; cursor: ${atual ? "default" : "pointer"};
+              border: 1px solid ${c.borda};
+            "
+          >${c.icone} ${escapeHTML(s)}</button>`;
+      }).join("");
 
       return `
       <div style="
@@ -73,7 +80,7 @@ function renderGerenciar(denuncias) {
 
         <p style="margin: 0; font-size: 13px; color: #8a9099; line-height: 1.4;">
           <strong style="color: #c4c8cd;">Descrição:</strong> ${escapeHTML(d.descricao)}</p>${foto ? `
-            <img src="${foto}" alt="Foto da denúncia" style="
+            <img src="${foto}" alt="Foto da denúncia" loading="lazy" style="
               width: 100%;
               max-height: 160px;
               object-fit: cover;
@@ -87,62 +94,12 @@ function renderGerenciar(denuncias) {
             📅 ${escapeHTML(d.data)} ${d.horario ? "· 🕐 " + escapeHTML(d.horario) : ""}
           </span>
           <span style="font-size: 11px; background: ${corStatus.bg}; color: ${corStatus.cor}; padding: 4px 8px; border-radius: 4px; font-weight: 600;">
-            ⏳ ${escapeHTML(d.status)}
+            ${corStatus.icone} ${escapeHTML(statusAtual)}
           </span>
         </div>
 
-        <button
-          onclick="atualizarStatus(this.dataset.id, 'Resolvida')" data-id="${id}"
-          style="
-            flex: 1; padding: 8px; border: none; border-radius: 6px;
-            background: #0f200f; color: #29d17c;
-            font-size: 12px; font-weight: 600; cursor: pointer;
-            border: 1px solid #1a4a1a;
-            transition: background 0.15s;
-          "
-          onmouseover="this.style.background='#1a4a1a'"
-          onmouseout="this.style.background='#0f200f'"
-        >✔ Resolvida</button>
-        
-        <button
-        onclick="atualizarStatus(this.dataset.id, 'Alarme Falso')" data-id="${id}"
-        style="
-        flex: 1; padding: 8px; border: none; border-radius: 6px;
-        background: #2a2a00; color: #d4d400;
-        font-size: 12px; font-weight: 600; cursor: pointer;
-        border: 1px solid #4a4a00;
-        transition: background 0.15s;
-        "
-        onmouseover="this.style.background='#4a4a00'"
-        onmouseout="this.style.background='#2a2a00'"
-        >⚠ Alarme Falso</button>
-        
-        <div style="display: flex; gap: 8px; margin-top: 4px;">
-          <button
-            onclick="atualizarStatus(this.dataset.id, 'Pendente')" data-id="${id}"
-            style="
-              flex: 1; padding: 8px; border: none; border-radius: 6px;
-              background: #0a1a2a; color: #4db8ff;
-              font-size: 12px; font-weight: 600; cursor: pointer;
-              border: 1px solid #1a3a5a;
-              transition: background 0.15s;
-            "
-            onmouseover="this.style.background='#1a3a5a'"
-            onmouseout="this.style.background='#0a1a2a'"
-          >⏳ Pendente</button>
-          <button
-            onclick="atualizarStatus(this.dataset.id, 'Em Verificação')" data-id="${id}"
-            style="
-              flex: 1; padding: 8px; border: none; border-radius: 6px;
-              background: #35250d; color: #e88e44;
-              font-size: 12px; font-weight: 600; cursor: pointer;
-              border: 1px solid #c68c46;
-              transition: background 0.15s;
-            "
-            onmouseover="this.style.background='#c68c46'"
-            onmouseout="this.style.background='#35250d'"
-          >Em verificação</button>
-
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
+          ${botoesStatus}
         </div>
       </div>
     `;

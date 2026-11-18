@@ -11,7 +11,9 @@ const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { db, salvar, novoId, DB_PATH } = require("./db");
+const {
+  db, salvar, novoId, DB_PATH, UPLOADS_DIR, STATUS, normalizarStatus, salvarFoto, apagarFoto,
+} = require("./db");
 
 const PORT = Number(process.env.PORT) || 3000;
 const PRODUCAO = process.env.NODE_ENV === "production";
@@ -26,7 +28,6 @@ if (!JWT_SECRET) {
   console.warn("[aviso] JWT_SECRET não definido: usando um segredo temporário (logins caem ao reiniciar).");
 }
 
-const STATUS = ["Pendente", "Em Verificação", "Resolvida", "Alarme Falso"];
 const GRAVIDADES = ["Baixa", "Média", "Alta", "Crítica"];
 
 const app = express();
@@ -65,6 +66,12 @@ function email(valor, campo) {
 
 function agoraBR() {
   return new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+}
+
+// Data (AAAA-MM-DD) num fuso horário, deslocada em "dias" (pode ser negativo).
+function dataNoFuso(timeZone, dias = 0) {
+  const d = new Date(Date.now() + dias * 86_400_000);
+  return d.toLocaleDateString("en-CA", { timeZone }); // en-CA já usa AAAA-MM-DD
 }
 
 // Remove campos sensíveis antes de mandar um usuário para o front.
@@ -246,18 +253,15 @@ api.post("/denuncias", autenticado, (req, res) => {
   if (typeof b.data !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(b.data) || isNaN(Date.parse(b.data))) {
     throw erro(400, "Data inválida.");
   }
+  // Fernando de Noronha é o fuso mais adiantado do Brasil: nenhuma data válida passa dele.
+  if (b.data > dataNoFuso("America/Noronha")) throw erro(400, "A data do foco não pode estar no futuro.");
+  if (b.data < dataNoFuso("America/Sao_Paulo", -365)) throw erro(400, "A data do foco não pode ter mais de um ano.");
   const gravidade = GRAVIDADES.includes(b.gravidade) ? b.gravidade : "Baixa";
   const descricao = texto(b.descricao, "Descrição", { max: 2000, obrigatorio: false });
   const horario = typeof b.horario === "string" && /^\d{2}:\d{2}$/.test(b.horario) ? b.horario : null;
 
-  let foto = null;
-  if (b.foto) {
-    if (typeof b.foto !== "string" || !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(b.foto)) {
-      throw erro(400, "Foto inválida.");
-    }
-    if (b.foto.length > 3_000_000) throw erro(413, "Foto muito grande.");
-    foto = b.foto;
-  }
+  // A foto chega em base64, mas é gravada como arquivo; no banco fica só o caminho.
+  const foto = b.foto ? salvarFoto(b.foto) : null;
 
   const nova = {
     id: novoId(),
@@ -268,6 +272,8 @@ api.post("/denuncias", autenticado, (req, res) => {
     descricao,
     foto,
     status: "Pendente",
+    criadaEm: new Date().toISOString(),
+    statusAtualizadoEm: null,
     usuarioId: req.usuario.id,
     usuario: req.usuario.login,
     longitude,
@@ -279,12 +285,16 @@ api.post("/denuncias", autenticado, (req, res) => {
 });
 
 api.patch("/denuncias/:id/status", autenticado, somenteOrgao, (req, res) => {
-  const { status } = req.body || {};
-  if (!STATUS.includes(status)) throw erro(400, "Status inválido.");
+  const status = normalizarStatus(req.body?.status);
+  if (!status) throw erro(400, "Status inválido.");
   const d = db().denuncias.find((x) => x.id === req.params.id);
   if (!d) throw erro(404, "Denúncia não encontrada.");
-  d.status = status;
-  salvar();
+  if (d.status !== status) {
+    d.status = status;
+    d.statusAtualizadoEm = new Date().toISOString(); // usado no card "Resolvidas hoje"
+    d.statusAtualizadoPor = req.usuario.id;
+    salvar();
+  }
   res.json(d);
 });
 
@@ -298,6 +308,7 @@ api.delete("/denuncias/:id", autenticado, (req, res) => {
   }
   dados.denuncias.splice(i, 1);
   salvar();
+  apagarFoto(d.foto);
   res.status(204).end();
 });
 
@@ -399,6 +410,14 @@ app.use("/api", (req, res) => res.status(404).json({ erro: "Rota não encontrada
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
 app.get("/", (req, res) => res.redirect("/firewatch.html"));
 app.use(express.static(PUBLIC_DIR, { dotfiles: "ignore", index: false }));
+// Fotos das denúncias. O nome do arquivo é aleatório e nunca muda, então pode ficar em cache.
+app.use("/uploads", express.static(UPLOADS_DIR, {
+  dotfiles: "ignore",
+  index: false,
+  immutable: true,
+  maxAge: "30d",
+  setHeaders: (res) => res.setHeader("X-Content-Type-Options", "nosniff"),
+}));
 
 // ── Tratamento de erros ─────────────────────────────────
 

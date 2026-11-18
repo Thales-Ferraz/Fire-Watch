@@ -16,19 +16,10 @@ async function abrirHistorico() {
 }
 
 function createCard(denuncia) {
-  const foto = urlImagemSegura(denuncia.foto);
-  // Cores baseadas na gravidade para o badge
-  let corGravidade = "#ff8c42"; // Média (Laranja)
-  if (denuncia.gravidade === "Baixa") corGravidade = "#1eeb84"; // Verde
-  if (denuncia.gravidade === "Alta") corGravidade = "#ff5c1a"; // Vermelho/Laranja escuro
-  if (denuncia.gravidade === "Crítica") corGravidade = "#ff3b3b"; // Vermelho vivo
-
-  const corStatus = {
-    Pendente: { bg: "#0a1a2a", cor: "#4db8ff" },
-    Resolvida: { bg: "#0f200f", cor: "#29d17c" },
-    "Alarme Falso": { bg: "#2a2a00", cor: "#d4d400" },
-    "Em verificação": { bg: "#35250d", cor: "#e88e44" },
-  }[denuncia.status] || { bg: "#35250d", cor: "#e88e44" };
+  const foto = urlFoto(denuncia.foto);
+  const corGravidade = corDaGravidade(denuncia.gravidade);
+  const statusAtual = normalizarStatus(denuncia.status);
+  const corStatus = corDoStatus(statusAtual);
   return `
   <div style="
       background: #161819; 
@@ -55,24 +46,23 @@ function createCard(denuncia) {
       </div>
       
       <p style="margin: 0; font-size: 13px; color: #8a9099; line-height: 1.4;">
-          <strong style="color: #c4c8cd;">Descrição:</strong> ${escapeHTML(denuncia.descricao)}${foto ? `
-            <img src="${foto}" alt="Foto da denúncia" style="
-              width: 100%;
-              max-height: 160px;
-              object-fit: cover;
-            border-radius: 6px;
-            border: 1px solid #2a2d30;
-            " />
-            ` : ""}
-      </p>
+          <strong style="color: #c4c8cd;">Descrição:</strong> ${escapeHTML(denuncia.descricao)}
+      </p>${foto ? `
+      <img src="${foto}" alt="Foto da denúncia" loading="lazy" style="
+        width: 100%;
+        max-height: 160px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #2a2d30;
+      " />` : ""}
       
       <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto;">
           <span style="font-size: 11px; background: #1e2022; color: #8a9099; padding: 4px 8px; border-radius: 4px; border: 1px solid #2a2d30;">
               📅 ${escapeHTML(denuncia.data)} ${denuncia.horario ? "· 🕐 " + escapeHTML(denuncia.horario) : ""}
           </span>
           <span style="font-size: 11px; background: ${corStatus.bg}; color: ${corStatus.cor}; padding: 4px 8px; border-radius: 4px; font-weight: 600;">
-            ${escapeHTML(denuncia.status)}
-          </span>                   
+            ${corStatus.icone} ${escapeHTML(statusAtual)}
+          </span>                 
       </div>
       <button
         onclick="excluirDenuncia(this.dataset.id)" data-id="${escapeHTML(denuncia.id)}"
