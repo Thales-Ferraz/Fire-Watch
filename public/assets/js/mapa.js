@@ -2,7 +2,7 @@
 
 // Escancara a função para o sistema global conseguir acionar
 window.refazerMapaNoDashboard = function() {
-    mapboxgl.accessToken = 'pk.eyJ1IjoidGhhbGVzMDEwMiIsImEiOiJjbXF1ejl0ZmYweGhiMnlweHNsOXQ5MDh1In0.6HTif46NMbTzBDk5upg9TQ';
+    mapboxgl.accessToken = MAPBOX_TOKEN; // definido em config.js
 
     // Se o elemento do mapa não estiver na tela (caso esteja no histórico ou catálogo), cancela
     if (!document.getElementById('map')) return;
@@ -16,8 +16,7 @@ window.refazerMapaNoDashboard = function() {
 
     map.on('style.load', async () => {
         try {
-            const resposta = await fetch("https://fire-watch.onrender.com/denuncias");
-            const denuncias = await resposta.json();
+            const denuncias = await apiFetch("/denuncias");
 
             denuncias.forEach(denuncia => {
                 if (denuncia.status === "Pendente" || denuncia.status === "Em Verificação") {
@@ -32,7 +31,7 @@ window.refazerMapaNoDashboard = function() {
 
                     new mapboxgl.Marker({ color: corPino })
                         .setLngLat([lng, lat])
-                        .setPopup(new mapboxgl.Popup({ offset: [0, -15] }).setHTML(`<h3>🔥 ${denuncia.local}</h3>`))
+                        .setPopup(new mapboxgl.Popup({ offset: [0, -15] }).setHTML(`<h3>🔥 ${escapeHTML(denuncia.local)}</h3>`))
                         .addTo(map);
                 }
             });

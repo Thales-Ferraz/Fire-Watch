@@ -24,15 +24,14 @@ async function abrirDashboard() {
 
 async function atualizarCards() {
   try {
-    const resposta = await fetch("https://fire-watch.onrender.com/denuncias");
-    const denuncias = await resposta.json();
+    const denuncias = await apiFetch("/denuncias");
 
     const hoje = new Date().toISOString().split("T")[0];
 
-    const emVerificacao  = denuncias.filter(d => d.status.trim() === "Em Verificação").length;
-    const pendentes      = denuncias.filter(d => d.status.trim() === "Pendente").length;
+    const emVerificacao  = denuncias.filter(d => (d.status || "").trim() === "Em Verificação").length;
+    const pendentes      = denuncias.filter(d => (d.status || "").trim() === "Pendente").length;
     const focosHoje      = denuncias.filter(d => d.data === hoje).length;
-    const resolvidosHoje = denuncias.filter(d => d.status.trim() === "Resolvida" && d.data === hoje).length;
+    const resolvidosHoje = denuncias.filter(d => (d.status || "").trim() === "Resolvida" && d.data === hoje).length;
 
     document.querySelector(".stat-card.c-fire .stat-value").textContent   = emVerificacao;
     document.querySelector(".stat-card.c-fire .stat-note").textContent    = emVerificacao === 0 ? "nenhuma no momento" : "em andamento";
@@ -53,8 +52,7 @@ async function atualizarCards() {
 
 async function renderGraficoPorEstado() {
   try {
-    const resposta = await fetch("https://fire-watch.onrender.com/denuncias");
-    const denuncias = await resposta.json();
+    const denuncias = await apiFetch("/denuncias");
 
     // Conta denúncias por estado
    const siglas = {
@@ -71,7 +69,7 @@ async function renderGraficoPorEstado() {
 
     const contagemEstados = {};
         denuncias
-            .filter(d => d.status.trim() !== "Alarme Falso")
+            .filter(d => (d.status || "").trim() !== "Alarme Falso")
             .forEach(d => {
         const estadoEncontrado = Object.keys(siglas).find(nome => d.local.includes(nome));
         const estado = estadoEncontrado ? siglas[estadoEncontrado] : "Outros";

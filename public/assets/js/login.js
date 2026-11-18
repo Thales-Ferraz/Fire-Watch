@@ -1,4 +1,3 @@
-const API_URL = "https://fire-watch.onrender.com/usuarios";
 const PAGINA_INICIAL = "firewatch.html";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -14,49 +13,32 @@ async function realizarLogin(event) {
 
   const login = document.getElementById("username").value.trim();
   const senha = document.getElementById("password").value;
+  const botao = event.target.querySelector("button[type=submit]");
 
   if (!login || !senha) {
     alert("Preencha login e senha.");
     return;
   }
 
+  if (botao) botao.disabled = true;
   try {
-    const resposta = await fetch(
-      `${API_URL}?login=${encodeURIComponent(login)}&senha=${encodeURIComponent(senha)}`
-    );
+    // A senha vai no corpo da requisição (POST), nunca na URL.
+    const { token, usuario } = await apiFetch("/auth/login", {
+      method: "POST",
+      body: { login, senha },
+    });
 
-    const usuarios = await resposta.json();
+    salvarSessao(token, usuario);
 
-    if (usuarios.length === 0) {
-      alert("Usuário não encontrado. Faça o cadastro.");
-      return;
+    if (usuario.tipo === "orgao" && usuario.status === "pendente") {
+      alert("Seu cadastro de órgão público ainda está aguardando aprovação. Até lá, você usa o sistema como cidadão.");
     }
 
-    const usuario = usuarios[0];
-
-    if (usuario.primeiroLogin === true) {
-      const patchResposta = await fetch(`${API_URL}/${usuario.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          primeiroLogin: false
-        })
-      });
-
-      if (!patchResposta.ok) {
-        throw new Error("Erro ao atualizar primeiro login.");
-      }
-
-      usuario.primeiroLogin = false;
-    }
-
-    sessionStorage.setItem("usuarioLogado", JSON.stringify(usuario));
     window.location.href = PAGINA_INICIAL;
-
   } catch (erro) {
     console.error("Erro no login:", erro);
-    alert("Erro ao realizar login.");
+    alert(erro.message);
+  } finally {
+    if (botao) botao.disabled = false;
   }
 }

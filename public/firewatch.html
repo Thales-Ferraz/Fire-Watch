@@ -11,10 +11,6 @@
     />
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js"></script>
     <script src="https://api.mapbox.com/search-js/v1.0.0-beta.22/web.js"></script>
-    <script>
-      const ACCESS_TOKEN =
-        "pk.eyJ1IjoidGhhbGVzMDEwMiIsImEiOiJjbXF1ejl0ZmYweGhiMnlweHNsOXQ5MDh1In0.6HTif46NMbTzBDk5upg9TQ";
-    </script>
   </head>
 
   <body>
@@ -47,15 +43,21 @@
 
         <!-- ÁREA EXCLUSIVA DO ÓRGÃO -->
         <div id="areaOrgao" style="display: none">
-          <button class="nav-item" onclick="setNav(this)">
-            <span class="icon">🛡️</span> Painel do Órgão
-          </button>
-
           <button
             class="nav-item"
             onclick="(setNav(this), abrirGerenciarDenuncias())"
           >
             <span class="icon">📋</span> Gerenciar Denúncias
+          </button>
+        </div>
+
+        <!-- ÁREA EXCLUSIVA DO ADMINISTRADOR -->
+        <div id="areaAdmin" style="display: none">
+          <button
+            class="nav-item"
+            onclick="(setNav(this), abrirAprovacaoOrgaos())"
+          >
+            <span class="icon">🛡️</span> Aprovar Órgãos
           </button>
         </div>
 
@@ -183,8 +185,11 @@
       <div id="conteudoModal"></div>
     </div>
 
+    <script src="assets/js/config.js"></script>
     <script src="assets/js/auth.js"></script>
+    <script src="assets/js/api.js"></script>
     <script src="assets/js/home-auth.js"></script>
+    <script src="assets/js/admin.js"></script>
     <script src="assets/js/historico.js"></script>
     <script src="assets/js/denuncia.js"></script>
     <script src="assets/js/catalogo.js"></script>
