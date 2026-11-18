@@ -1,170 +1,235 @@
+// Dashboard: busca as denúncias UMA vez e preenche cards, alerta, mapa,
+// gráfico e ocorrências recentes a partir desses mesmos dados.
+
+const SIGLAS_ESTADOS = {
+  "Minas Gerais": "MG", "São Paulo": "SP", "Rio de Janeiro": "RJ",
+  "Bahia": "BA", "Paraná": "PR", "Rio Grande do Sul": "RS",
+  "Goiás": "GO", "Pará": "PA", "Mato Grosso": "MT",
+  "Mato Grosso do Sul": "MS", "Ceará": "CE", "Pernambuco": "PE",
+  "Maranhão": "MA", "Amazonas": "AM", "Santa Catarina": "SC",
+  "Espírito Santo": "ES", "Tocantins": "TO", "Rondônia": "RO",
+  "Acre": "AC", "Roraima": "RR", "Amapá": "AP", "Piauí": "PI",
+  "Rio Grande do Norte": "RN", "Paraíba": "PB", "Alagoas": "AL",
+  "Sergipe": "SE", "Distrito Federal": "DF",
+};
+
+// Nomes mais longos primeiro, para "Mato Grosso do Sul" não ser contado como "Mato Grosso".
+const NOMES_ESTADOS = Object.keys(SIGLAS_ESTADOS).sort((a, b) => b.length - a.length);
+
+function siglaDoEstado(local) {
+  const nome = NOMES_ESTADOS.find((n) => String(local || "").includes(n));
+  return nome ? SIGLAS_ESTADOS[nome] : "Outros";
+}
+
+let dashboardHtml = null;   // dashboard.html fica em cache depois da 1ª vez
+let dashboardGeracao = 0;   // evita desenhar um dashboard antigo se o usuário trocou de tela
+let graficoAtual = null;
+
 async function abrirDashboard() {
   const mainContent = document.querySelector(".content");
   if (!mainContent) return;
+  const geracao = ++dashboardGeracao;
 
   try {
-    const resposta = await fetch("dashboard.html");
-    if (!resposta.ok) throw new Error("Erro ao carregar dashboard.");
-
-    const html = await resposta.text();
-    mainContent.innerHTML = html;
-
-    if (typeof refazerMapaNoDashboard === "function") {
-      refazerMapaNoDashboard();
+    if (!dashboardHtml) {
+      const resposta = await fetch("dashboard.html");
+      if (!resposta.ok) throw new Error("Erro ao carregar o dashboard.");
+      dashboardHtml = await resposta.text();
     }
-
-    await atualizarCards();
-    await renderGraficoPorEstado();
-
+    if (geracao !== dashboardGeracao) return;
+    mainContent.innerHTML = dashboardHtml;
   } catch (erro) {
     console.error(erro);
     mainContent.innerHTML = `<p style="color: #ff3b3b; text-align: center; padding: 20px;">⚠️ Erro ao carregar o Dashboard.</p>`;
+    return;
   }
+
+  await atualizarDashboard(geracao);
 }
 
-async function atualizarCards() {
+// Busca os dados de novo e redesenha o dashboard (se ele estiver na tela).
+async function atualizarDashboard(geracao = dashboardGeracao) {
+  if (!document.getElementById("dashStats")) return;
+
+  let denuncias;
   try {
-    const denuncias = await apiFetch("/denuncias");
-
-    const hoje = new Date().toISOString().split("T")[0];
-
-    const emVerificacao  = denuncias.filter(d => (d.status || "").trim() === "Em Verificação").length;
-    const pendentes      = denuncias.filter(d => (d.status || "").trim() === "Pendente").length;
-    const focosHoje      = denuncias.filter(d => d.data === hoje).length;
-    const resolvidosHoje = denuncias.filter(d => (d.status || "").trim() === "Resolvida" && d.data === hoje).length;
-
-    document.querySelector(".stat-card.c-fire .stat-value").textContent   = emVerificacao;
-    document.querySelector(".stat-card.c-fire .stat-note").textContent    = emVerificacao === 0 ? "nenhuma no momento" : "em andamento";
-
-    document.querySelector(".stat-card.c-danger .stat-value").textContent = pendentes;
-    document.querySelector(".stat-card.c-danger .stat-note").textContent  = pendentes === 0 ? "nenhuma pendente" : "aguardando verificação";
-
-    document.querySelector(".stat-card.c-ember .stat-value").textContent  = focosHoje;
-    document.querySelector(".stat-card.c-ember .stat-note").textContent   = focosHoje === 0 ? "nenhum hoje" : "registrados hoje";
-
-    document.querySelector(".stat-card.c-green .stat-value").textContent  = resolvidosHoje;
-    document.querySelector(".stat-card.c-green .stat-note").textContent   = resolvidosHoje === 0 ? "nenhuma hoje" : "resolvidas hoje";
-
+    denuncias = await apiFetch("/denuncias");
   } catch (erro) {
-    console.error("Erro ao atualizar cards:", erro);
+    console.error(erro);
+    if (geracao !== dashboardGeracao) return;
+    mostrarAlertaDashboard(`<strong>Não foi possível carregar os dados:</strong> ${escapeHTML(erro.message)}`);
+    return;
+  }
+
+  // O usuário pode ter trocado de tela enquanto os dados chegavam.
+  if (geracao !== dashboardGeracao || !document.getElementById("dashStats")) return;
+
+  denuncias = denuncias.map((d) => ({ ...d, status: normalizarStatus(d.status) }));
+
+  preencherCards(denuncias);
+  preencherAlerta(denuncias);
+  preencherRecentes(denuncias);
+  renderMapa(denuncias.filter(isAtiva));
+  renderGraficoPorEstado(denuncias);
+}
+
+function mostrarAlertaDashboard(html) {
+  const box = document.getElementById("dashAlerta");
+  if (!box) return;
+  document.getElementById("dashAlertaTexto").innerHTML = html;
+  box.hidden = false;
+}
+
+function preencherCards(denuncias) {
+  const hoje = hojeLocal();
+
+  const valores = {
+    emVerificacao: denuncias.filter((d) => d.status === STATUS.EM_VERIFICACAO).length,
+    pendentes: denuncias.filter((d) => d.status === STATUS.PENDENTE).length,
+    focosHoje: denuncias.filter((d) => d.data === hoje && d.status !== STATUS.ALARME_FALSO).length,
+    // Usa a data em que o órgão marcou como resolvida, não a data do foco.
+    resolvidasHoje: denuncias.filter(
+      (d) => d.status === STATUS.RESOLVIDA && d.statusAtualizadoEm && hojeLocal(new Date(d.statusAtualizadoEm)) === hoje
+    ).length,
+  };
+
+  const notas = {
+    emVerificacao: (n) => (n === 0 ? "nenhuma no momento" : "em andamento"),
+    pendentes: (n) => (n === 0 ? "nenhuma pendente" : "aguardando verificação"),
+    focosHoje: (n) => (n === 0 ? "nenhum hoje" : "registrados hoje"),
+    resolvidasHoje: (n) => (n === 0 ? "nenhuma hoje" : "resolvidas hoje"),
+  };
+
+  for (const [chave, valor] of Object.entries(valores)) {
+    const el = document.querySelector(`[data-card="${chave}"]`);
+    const nota = document.querySelector(`[data-nota="${chave}"]`);
+    if (el) el.textContent = valor;
+    if (nota) nota.textContent = notas[chave](valor);
   }
 }
 
-async function renderGraficoPorEstado() {
-  try {
-    const denuncias = await apiFetch("/denuncias");
+function preencherAlerta(denuncias) {
+  const box = document.getElementById("dashAlerta");
+  if (!box) return;
 
-    // Conta denúncias por estado
-   const siglas = {
-    "Minas Gerais": "MG", "São Paulo": "SP", "Rio de Janeiro": "RJ",
-    "Bahia": "BA", "Paraná": "PR", "Rio Grande do Sul": "RS",
-    "Goiás": "GO", "Pará": "PA", "Mato Grosso": "MT",
-    "Mato Grosso do Sul": "MS", "Ceará": "CE", "Pernambuco": "PE",
-    "Maranhão": "MA", "Amazonas": "AM", "Santa Catarina": "SC",
-    "Espírito Santo": "ES", "Tocantins": "TO", "Rondônia": "RO",
-    "Acre": "AC", "Roraima": "RR", "Amapá": "AP", "Piauí": "PI",
-    "Rio Grande do Norte": "RN", "Paraíba": "PB", "Alagoas": "AL",
-    "Sergipe": "SE", "Distrito Federal": "DF"
-    };
+  const criticas = denuncias.filter((d) => isAtiva(d) && d.gravidade === "Crítica");
+  if (!criticas.length) {
+    box.hidden = true;
+    return;
+  }
 
-    const contagemEstados = {};
-        denuncias
-            .filter(d => (d.status || "").trim() !== "Alarme Falso")
-            .forEach(d => {
-        const estadoEncontrado = Object.keys(siglas).find(nome => d.local.includes(nome));
-        const estado = estadoEncontrado ? siglas[estadoEncontrado] : "Outros";
-        contagemEstados[estado] = (contagemEstados[estado] || 0) + 1;
-    });
+  const estados = [...new Set(criticas.map((d) => siglaDoEstado(d.local)))].filter((s) => s !== "Outros");
+  const onde = estados.length ? ` em ${estados.join(", ")}` : "";
+  const n = criticas.length;
+  mostrarAlertaDashboard(
+    `<strong>Alerta ativo:</strong> ${n} foco${n > 1 ? "s" : ""} crítico${n > 1 ? "s" : ""}${escapeHTML(onde)} aguardando atendimento.`
+  );
+}
 
-    // Ordena do maior para o menor
-    const estadosOrdenados = Object.entries(contagemEstados)
-      .sort((a, b) => b[1] - a[1]);
+function preencherRecentes(denuncias) {
+  const lista = document.getElementById("dashRecentes");
+  const total = document.getElementById("dashRecentesTotal");
+  if (!lista) return;
 
-    const labels = estadosOrdenados.map(([estado]) => estado);
-    const valores = estadosOrdenados.map(([, qtd]) => qtd);
+  const recentes = denuncias
+    .filter(isAtiva)
+    .sort((a, b) => `${b.data} ${b.horario || ""}`.localeCompare(`${a.data} ${a.horario || ""}`))
+    .slice(0, 5);
 
-    // Substitui o incidents-box pelo gráfico
-    const incidentsBox = document.querySelector(".incidents-box");
-    if (!incidentsBox) return;
+  if (total) total.textContent = `${recentes.length} de ${denuncias.filter(isAtiva).length} ativas`;
 
-    incidentsBox.innerHTML = `
-      <div class="incidents-header">
-        Denúncias por Estado
-        <span>${denuncias.length} total</span>
-      </div>
-      <div style="padding: 16px; height: calc(100% - 48px); display: flex; align-items: center;">
-        <canvas id="graficoEstados"></canvas>
-      </div>
-    `;
+  if (!recentes.length) {
+    lista.innerHTML = `<div style="padding: 24px; text-align: center; color: #8a9099; font-size: 14px;">
+      Nenhum foco ativo no momento.</div>`;
+    return;
+  }
 
-    // Carrega Chart.js dinamicamente se ainda não estiver carregado
-    if (!window.Chart) {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = "https://cdn.jsdelivr.net/npm/chart.js";
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
-    }
+  const icone = { Baixa: "🌫️", Média: "🔥", Alta: "🔥", Crítica: "🚨" };
 
-    const ctx = document.getElementById("graficoEstados").getContext("2d");
+  lista.innerHTML = recentes.map((d) => {
+    const c = corDoStatus(d.status);
+    return `
+      <div class="incident-item">
+        <div class="inc-icon">${icone[d.gravidade] || "🔥"}</div>
+        <div class="inc-info">
+          <div class="inc-name">${escapeHTML(d.local)}</div>
+          <div class="inc-meta">
+            ${escapeHTML(d.data)}${d.horario ? " · " + escapeHTML(d.horario) : ""} · Gravidade
+            <span style="color: ${corDaGravidade(d.gravidade)}; font-weight: 600;">${escapeHTML(d.gravidade)}</span>
+          </div>
+        </div>
+        <span class="badge" style="background: ${c.bg}; color: ${c.cor};">${escapeHTML(d.status)}</span>
+      </div>`;
+  }).join("");
+}
 
-    new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels,
-        datasets: [{
-          label: "Denúncias",
-          data: valores,
-          backgroundColor: labels.map((_, i) => {
-            const cores = ["#ff5c1a", "#ff8c42", "#ff3b3b", "#29d17c", "#4db8ff", "#d4d400"];
-            return cores[i % cores.length] + "cc"; // cc = 80% opacidade
-          }),
-          borderColor: labels.map((_, i) => {
-            const cores = ["#ff5c1a", "#ff8c42", "#ff3b3b", "#29d17c", "#4db8ff", "#d4d400"];
-            return cores[i % cores.length];
-          }),
-          borderWidth: 1,
-          borderRadius: 6,
-        }]
-      },
-      options: {
-        indexAxis: "y", // barras horizontais
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: ctx => ` ${ctx.parsed.x} denúncia${ctx.parsed.x !== 1 ? "s" : ""}`
-            }
-          }
-        },
-        scales: {
-          x: {
-            ticks: {
-              color: "#8a9099",
-              stepSize: 1,
-              precision: 0
-            },
-            grid: { color: "#2a2d30" },
-            border: { color: "#2a2d30" }
+function renderGraficoPorEstado(denuncias) {
+  const canvas = document.getElementById("graficoEstados");
+  if (!canvas) return;
+
+  const validas = denuncias.filter((d) => d.status !== STATUS.ALARME_FALSO);
+  const total = document.getElementById("dashGraficoTotal");
+  if (total) total.textContent = `${validas.length} denúncia${validas.length !== 1 ? "s" : ""}`;
+
+  if (!window.Chart) {
+    canvas.parentElement.innerHTML = `<p style="color:#8a9099;text-align:center;padding:20px;">
+      Não foi possível carregar a biblioteca de gráficos.</p>`;
+    return;
+  }
+
+  const contagem = {};
+  validas.forEach((d) => {
+    const estado = siglaDoEstado(d.local);
+    contagem[estado] = (contagem[estado] || 0) + 1;
+  });
+  const ordenados = Object.entries(contagem).sort((a, b) => b[1] - a[1]);
+  const labels = ordenados.map(([estado]) => estado);
+  const valores = ordenados.map(([, qtd]) => qtd);
+  const cores = ["#ff5c1a", "#ff8c42", "#ff3b3b", "#29d17c", "#4db8ff", "#d4d400"];
+
+  // Destrói o gráfico anterior antes de criar outro (evita vazamento de memória).
+  if (graficoAtual) graficoAtual.destroy();
+
+  graficoAtual = new Chart(canvas.getContext("2d"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Denúncias",
+        data: valores,
+        backgroundColor: labels.map((_, i) => cores[i % cores.length] + "cc"),
+        borderColor: labels.map((_, i) => cores[i % cores.length]),
+        borderWidth: 1,
+        borderRadius: 6,
+      }],
+    },
+    options: {
+      indexAxis: "y", // barras horizontais
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => ` ${ctx.parsed.x} denúncia${ctx.parsed.x !== 1 ? "s" : ""}`,
           },
-          y: {
-            ticks: { color: "#c4c8cd", font: { size: 13, weight: "600" } },
-            grid: { display: false },
-            border: { color: "#2a2d30" }
-          }
-        }
-      }
-    });
-
-  } catch (erro) {
-    console.error("Erro ao renderizar gráfico:", erro);
-  }
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: "#8a9099", stepSize: 1, precision: 0 },
+          grid: { color: "#2a2d30" },
+          border: { color: "#2a2d30" },
+        },
+        y: {
+          ticks: { color: "#c4c8cd", font: { size: 13, weight: "600" } },
+          grid: { display: false },
+          border: { color: "#2a2d30" },
+        },
+      },
+    },
+  });
 }
-document.addEventListener("DOMContentLoaded", () => {
-  // Chama a função automaticamente ao entrar no site
-  abrirDashboard();
-});
+
+// Ponto de entrada único da página.
+document.addEventListener("DOMContentLoaded", abrirDashboard);

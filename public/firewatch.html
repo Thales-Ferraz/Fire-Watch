@@ -107,77 +107,7 @@
       </header>
 
       <div class="content">
-        <div class="stats">
-          <div class="stat-card c-fire">
-            <div class="stat-label">Denúncias em verificação</div>
-            <div class="stat-value fire">—</div>
-            <div class="stat-note">aguardando dados</div>
-          </div>
-          <div class="stat-card c-danger">
-            <div class="stat-label">Denúncias pendentes</div>
-            <div class="stat-value danger">—</div>
-            <div class="stat-note">aguardando dados</div>
-          </div>
-          <div class="stat-card c-ember">
-            <div class="stat-label">Regiões afetadas</div>
-            <div class="stat-value ember">—</div>
-            <div class="stat-note">aguardando dados</div>
-          </div>
-          <div class="stat-card c-green">
-            <div class="stat-label">Resolvidos hoje</div>
-            <div class="stat-value green">—</div>
-            <div class="stat-note">aguardando dados</div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="map-box">
-            <div class="map-header">
-              <span style="font-size: 16px">🔥</span>
-              <h3>Mapa de Focos</h3>
-            </div>
-
-            <div style="flex: 1; position: relative">
-              <div
-                id="map"
-                style="position: absolute; inset: 0; width: 100%; height: 100%"
-              ></div>
-            </div>
-          </div>
-
-          <div class="incidents-box">
-            <div class="incidents-header">
-              Ocorrências recentes <span>3 registros</span>
-            </div>
-
-            <div class="incident-item">
-              <div class="inc-icon">🔥</div>
-              <div class="inc-info">
-                <div class="inc-name">Serra do Cipó – MG</div>
-                <div class="inc-meta">Foco ativo · Área estimada: —</div>
-              </div>
-              <span class="badge alto">Risco alto</span>
-            </div>
-
-            <div class="incident-item">
-              <div class="inc-icon">🌫️</div>
-              <div class="inc-info">
-                <div class="inc-name">Parque Estadual do Rio Doce</div>
-                <div class="inc-meta">Fumaça detectada · Risco moderado</div>
-              </div>
-              <span class="badge medio">Monitorando</span>
-            </div>
-
-            <div class="incident-item">
-              <div class="inc-icon">📋</div>
-              <div class="inc-info">
-                <div class="inc-name">Denúncia · Betim – MG</div>
-                <div class="inc-meta">Aguardando verificação de campo</div>
-              </div>
-              <span class="badge pendente">Pendente</span>
-            </div>
-          </div>
-        </div>
+        <p class="carregando">Carregando dashboard…</p>
       </div>
     </div>
 
@@ -185,7 +115,9 @@
       <div id="conteudoModal"></div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="assets/js/config.js"></script>
+    <script src="assets/js/constantes.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/api.js"></script>
     <script src="assets/js/home-auth.js"></script>
